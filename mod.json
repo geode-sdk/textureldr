@@ -2,7 +2,7 @@
 	"geode": "0.5.0",
 	"version": "v1.0.0",
 	"id": "geode.textureldr",
-	"name": "TextureLDR",
+	"name": "TextureLoader",
 	"developer": "Geode Team",
 	"description": "Texture Pack Manager"
 }

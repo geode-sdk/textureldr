@@ -109,11 +109,11 @@ size_t PackManager::loadPacks() {
 }
 
 void PackManager::addPackPaths() {
-    for (auto& pack : m_applied) {
-        Loader::get()->addTexturePath(pack->getPath());
-    }
     for (auto& pack : m_available) {
-        Loader::get()->removeTexturePath(pack->getPath());
+        (void)pack->unapply();
+    }
+    for (auto& pack : m_applied) {
+        (void)pack->apply();
     }
 }
 
@@ -123,11 +123,11 @@ void PackManager::applyPacks(CreateLayerFunc func) {
 }
 
 $on(LoadData) {
-    log::debug("Loading texture packs");
+    log::info("Loading texture packs");
     PackManager::get()->loadPacks();
 }
 
 $on(SaveData) {
-    log::debug("Saving texture packs");
+    log::info("Saving texture packs");
     PackManager::get()->savePacks();
 }

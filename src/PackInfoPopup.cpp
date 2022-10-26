@@ -59,9 +59,17 @@ ghc::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
 bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
     m_pack = pack;
 
-    this->setTitle(pack->getDisplayName());
-
     auto winSize = CCDirector::sharedDirector()->getWinSize();
+
+    auto title = WackyBypassFont::create(
+        pack->getDisplayName().c_str(),
+        this->getPathInPack("goldFont.fnt")
+    );
+    title->setPosition(
+        winSize.width / 2,
+        winSize.height / 2 + m_size.height / 2 - 30.f
+    );
+    m_mainLayer->addChild(title);
 
     // bigFont.fnt
 
@@ -70,18 +78,8 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
         this->getPathInPack("bigFont.fnt")
     );
     bigFontLabel->limitLabelWidth(m_size.width, .5f, .1f);
-    bigFontLabel->setPosition(winSize / 2 + CCPoint { 0.f, 30.f });
+    bigFontLabel->setPosition(winSize / 2 + CCPoint { 0.f, 10.f });
     m_mainLayer->addChild(bigFontLabel);
-
-    // goldFont.fnt
-
-    auto goldFontLabel = WackyBypassFont::create(
-        "This is what a Label looks like!",
-        this->getPathInPack("goldFont.fnt")
-    );
-    goldFontLabel->limitLabelWidth(m_size.width, .5f, .1f);
-    goldFontLabel->setPosition(winSize / 2);
-    m_mainLayer->addChild(goldFontLabel);
 
     // GJ_button_01.png
 
@@ -142,10 +140,16 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
 
 PackInfoPopup* PackInfoPopup::create(std::shared_ptr<Pack> pack) {
     auto ret = new PackInfoPopup;
-    if (ret && ret->init(356.f, 220.f, pack)) {
-        ret->autorelease();
-        return ret;
+    if (ret) {
+        ret->m_pack = pack;
+        if (ret->init(
+            320.f, 200.f, pack,
+            ret->getPathInPack("GJ_square01.png").string().c_str()
+        )) {
+            ret->autorelease();
+            return ret;
+        }
+        delete ret;
     }
-    CC_SAFE_DELETE(ret);
     return nullptr;
 }

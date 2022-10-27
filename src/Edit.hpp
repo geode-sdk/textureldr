@@ -10,8 +10,9 @@
 USE_GEODE_NAMESPACE();
 
 struct NodeEdit : public std::enable_shared_from_this<NodeEdit> {
-    std::shared_ptr<NodeEdit> m_parent = nullptr;
-    std::string m_id;
+    NodeEdit* m_parent = nullptr;
+    std::optional<std::string> m_id;
+    bool m_create = false;
     std::optional<float> m_x;
     std::optional<float> m_y;
     std::optional<float> m_width;
@@ -23,19 +24,39 @@ struct NodeEdit : public std::enable_shared_from_this<NodeEdit> {
 
     static NewResult<std::shared_ptr<NodeEdit>> from(
         pugi::xml_node const& node,
-        std::shared_ptr<NodeEdit> parent = nullptr
+        NodeEdit* parent = nullptr
     );
 
     static Layout* createLayout(std::string const& name);
 
     virtual NewResult<> parse(pugi::xml_node const& node);
     virtual void apply(CCNode* node) const;
+    virtual CCNode* createNode() const;
+};
+
+struct SpriteEdit : public NodeEdit {
+    std::optional<std::string> m_src;
+    std::optional<std::string> m_frame;
+
+    NewResult<> parse(pugi::xml_node const& node) override;
+    void apply(CCNode* node) const override;
+    CCNode* createNode() const override;
+};
+
+struct LabelEdit : public NodeEdit {
+    std::optional<std::string> m_text;
+    std::optional<std::string> m_font;
+
+    NewResult<> parse(pugi::xml_node const& node) override;
+    void apply(CCNode* node) const override;
+    CCNode* createNode() const override;
 };
 
 struct SceneEdit : public NodeEdit {
     std::shared_ptr<AEnterLayerEventHandler> m_handler;
 
     NewResult<> parse(pugi::xml_node const& node) override;
+    CCNode* createNode() const override;
 };
 
 class EditCollection final {

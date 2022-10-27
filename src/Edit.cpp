@@ -13,12 +13,20 @@
 
 NewResult<std::shared_ptr<NodeEdit>> NodeEdit::from(
     pugi::xml_node const& node,
-    std::shared_ptr<NodeEdit> parent
+    NodeEdit* parent
 ) {
     std::shared_ptr<NodeEdit> edit;
     switch (hash(node.name())) {
         case hash("node"): {
             edit = std::make_shared<NodeEdit>();
+        } break;
+
+        case hash("label"): {
+            edit = std::make_shared<LabelEdit>();
+        } break;
+
+        case hash("sprite"): {
+            edit = std::make_shared<SpriteEdit>();
         } break;
 
         case hash("scene"): {
@@ -44,13 +52,16 @@ NewResult<> NodeEdit::parse(pugi::xml_node const& node) {
     PARSE_ATTR(width, float);
     PARSE_ATTR(height, float);
     PARSE_ATTR(layout, string);
+    PARSE_ATTR(create, bool);
 
     for (auto child : node.children()) {
-        auto c = NodeEdit::from(child, shared_from_this());
-        if (!c) {
-            return NewErr(c.unwrapErr());
+        if (child.name() && strlen(child.name())) {
+            auto c = NodeEdit::from(child, this);
+            if (!c) {
+                return NewErr(c.unwrapErr());
+            }
+            m_children.push_back(c.unwrap());
         }
-        m_children.push_back(c.unwrap());
     }
 
     return NewOk();
@@ -90,6 +101,8 @@ Layout* NodeEdit::createLayout(std::string const& expr) {
 }
 
 void NodeEdit::apply(CCNode* node) const {
+    if (m_id) node->setID(m_id.value());
+
     if (m_x) node->setPositionX(m_x.value());
     if (m_y) node->setPositionY(m_y.value());
 
@@ -105,18 +118,121 @@ void NodeEdit::apply(CCNode* node) const {
         m_height.value()
     });
 
+    for (auto& child : m_children) {
+        if (child->m_id && !m_create) {
+            if (auto n = node->getChildByID(child->m_id.value())) {
+                child->apply(n);
+            }
+        } else {
+            if (auto c = child->createNode()) {
+                node->addChild(c);
+                child->apply(c);
+            }
+        }
+    }
+    
     if (m_layout) {
         if (auto layout = createLayout(m_layout.value())) {
             node->setLayout(layout);
+        } else {
+            node->updateLayout();
         }
+    } else {
+        node->updateLayout();
+    }
+}
+
+CCNode* NodeEdit::createNode() const {
+    return CCNode::create();
+}
+
+// LabelEdit
+
+NewResult<> LabelEdit::parse(pugi::xml_node const& node) {
+    auto res = NodeEdit::parse(node);
+    if (!res) return NewErr(res.unwrapErr());
+
+    PARSE_ATTR(text, string);
+    PARSE_ATTR(font, string);
+
+    if (auto val = node.text()) {
+        m_text = val.as_string();
     }
 
-    for (auto& child : m_children) {
-        if (auto n = node->getChildByID(child->m_id)) {
-            child->apply(n);
+    return NewOk();
+}
+
+void LabelEdit::apply(CCNode* node) const {
+    NodeEdit::apply(node);
+    if (auto label = dynamic_cast<CCLabelBMFont*>(node)) {
+        if (m_font) {
+            label->setFntFile(m_font.value().c_str());
+        }
+        if (m_text) {
+            label->setString(m_text.value().c_str());
         }
     }
 }
+
+CCNode* LabelEdit::createNode() const {
+    return CCLabelBMFont::create(
+        m_text.value_or("").c_str(),
+        m_font.value_or("bigFont.fnt").c_str()
+    );
+}
+
+// SpriteEdit
+
+NewResult<> SpriteEdit::parse(pugi::xml_node const& node) {
+    auto res = NodeEdit::parse(node);
+    if (!res) return NewErr(res.unwrapErr());
+
+    PARSE_ATTR(src, string);
+    PARSE_ATTR(frame, string);
+
+    return NewOk();
+}
+
+void SpriteEdit::apply(CCNode* node) const {
+    NodeEdit::apply(node);
+    if (auto spr = dynamic_cast<CCSprite*>(node)) {
+        if (m_src) {
+            if (!m_src.value().size()) {
+                spr->setTexture(nullptr);
+                spr->setTextureRect(CCRectZero);
+            }
+            else if (auto texture = CCTextureCache::get()->addImage(
+                m_src.value().c_str(), false
+            )) {
+                spr->setTexture(texture);
+                spr->setTextureRect({
+                    0, 0,
+                    texture->getContentSize().width,
+                    texture->getContentSize().height
+                });
+            }
+        }
+        if (m_frame) {
+            if (auto frame = CCSpriteFrameCache::get()->spriteFrameByName(
+                m_frame.value().c_str()
+            )) {
+                spr->setDisplayFrame(frame);
+            }
+        }
+    }
+}
+
+CCNode* SpriteEdit::createNode() const {
+    if (m_frame) {
+        return CCSprite::createWithSpriteFrameName(m_frame.value().c_str());
+    }
+    if (m_src) {
+        return CCSprite::create(m_src.value().c_str());
+    }
+    return CCSprite::create();
+}
+
+// SceneEdit
 
 NewResult<> SceneEdit::parse(pugi::xml_node const& node) {
     auto res = NodeEdit::parse(node);
@@ -130,6 +246,12 @@ NewResult<> SceneEdit::parse(pugi::xml_node const& node) {
 
     return NewOk();
 }
+
+CCNode* SceneEdit::createNode() const {
+    return CCScene::create();
+}
+
+// EditCollection
 
 NewResult<> EditCollection::addFrom(ghc::filesystem::path const& path) {
     auto data = file::readString(path);
@@ -156,14 +278,17 @@ NewResult<> EditCollection::addFrom(ghc::filesystem::path const& path) {
             return NewErr(editRes.unwrapErr());
         }
         auto edit = editRes.unwrap();
+        if (!edit->m_id) {
+            return NewErr("Scene is missing ID");
+        }
         // merge existing handlers to avoid adding too many
-        if (m_edits.count(edit->m_id)) {
+        if (m_edits.count(edit->m_id.value())) {
             ranges::push(
-                m_edits.at(edit->m_id)->m_children,
+                m_edits.at(edit->m_id.value())->m_children,
                 edit->m_children
             );
         } else {
-            m_edits.insert({ edit->m_id, edit });
+            m_edits.insert({ edit->m_id.value(), edit });
         }
     }
     return NewOk();

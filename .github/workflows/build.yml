@@ -16,7 +16,7 @@ on:
 
 env:
   GEODE_SDK: ${{ github.workspace }}/sdk
-  MOD_NAME: TextureLoader
+  MOD_NAME: TextureLDR
   MOD_ID: geode.textureldr
 
 jobs:

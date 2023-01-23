@@ -1,5 +1,5 @@
 #include "PackSelectLayer.hpp"
-#include <Geode/ui/LayerBG.hpp>
+#include <Geode/ui/General.hpp>
 #include <Geode/ui/ListView.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>

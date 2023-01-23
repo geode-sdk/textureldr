@@ -1,5 +1,6 @@
 #include "PackInfoPopup.hpp"
 #include <Geode/loader/Loader.hpp>
+#include <Geode/loader/Dirs.hpp>
 #include <Geode/binding/GameManager.hpp>
 
 class WackyBypassFont : public CCLabelBMFont {
@@ -52,7 +53,7 @@ ghc::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
     if (ghc::filesystem::exists(m_pack->getPath() / fname)) {
         return m_pack->getPath() / fname;
     } else {
-        return Loader::get()->getGameDirectory() / "Resources" / fname;
+        return dirs::getGameDir() / "Resources" / fname;
     }
 }
 

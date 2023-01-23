@@ -1,5 +1,7 @@
 #include "PackManager.hpp"
 #include <Geode/loader/Mod.hpp>
+#include <Geode/loader/ModEvent.hpp>
+#include <Geode/loader/ModJsonTest.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/utils/file.hpp>
 #include <Geode/utils/map.hpp>
@@ -122,12 +124,12 @@ void PackManager::applyPacks(CreateLayerFunc func) {
     reloadTextures(func);
 }
 
-$on(LoadData) {
+$on_mod(Loaded) {
     log::info("Loading texture packs");
     PackManager::get()->loadPacks();
 }
 
-$on(SaveData) {
+$on_mod(DataSaved) {
     log::info("Saving texture packs");
     PackManager::get()->savePacks();
 }

@@ -13,7 +13,7 @@ class $modify(MyMenuLayer, MenuLayer) {
         if (!MenuLayer::init())
             return false;
         
-        NodeStringIDManager::get()->provide(this);
+        NodeIDs::provideFor(this);
 
         auto menu = this->getChildByID("right-side-menu");
 

@@ -1,5 +1,5 @@
 {
-	"geode": "0.5.0",
+	"geode": "v1.0.0-alpha",
 	"version": "v1.0.0",
 	"id": "geode.textureldr",
 	"name": "TextureLoader",

@@ -4,7 +4,8 @@
 #include <optional>
 #include <vector>
 #include <Geode/utils/Result.hpp>
-#include <fs/filesystem.hpp>
+#include <Geode/ui/EnterLayerEvent.hpp>
+#include <ghc/filesystem.hpp>
 #include <cocos2d.h>
 
 USE_GEODE_NAMESPACE();
@@ -22,14 +23,14 @@ struct NodeEdit : public std::enable_shared_from_this<NodeEdit> {
 
     virtual ~NodeEdit() = default;
 
-    static NewResult<std::shared_ptr<NodeEdit>> from(
+    static Result<std::shared_ptr<NodeEdit>> from(
         pugi::xml_node const& node,
         NodeEdit* parent = nullptr
     );
 
     static Layout* createLayout(std::string const& name);
 
-    virtual NewResult<> parse(pugi::xml_node const& node);
+    virtual Result<> parse(pugi::xml_node const& node);
     virtual void apply(CCNode* node) const;
     virtual CCNode* createNode() const;
 };
@@ -38,7 +39,7 @@ struct SpriteEdit : public NodeEdit {
     std::optional<std::string> m_src;
     std::optional<std::string> m_frame;
 
-    NewResult<> parse(pugi::xml_node const& node) override;
+    Result<> parse(pugi::xml_node const& node) override;
     void apply(CCNode* node) const override;
     CCNode* createNode() const override;
 };
@@ -47,15 +48,15 @@ struct LabelEdit : public NodeEdit {
     std::optional<std::string> m_text;
     std::optional<std::string> m_font;
 
-    NewResult<> parse(pugi::xml_node const& node) override;
+    Result<> parse(pugi::xml_node const& node) override;
     void apply(CCNode* node) const override;
     CCNode* createNode() const override;
 };
 
 struct SceneEdit : public NodeEdit {
-    std::shared_ptr<AEnterLayerEventHandler> m_handler;
+    std::shared_ptr<EventListener<AEnterLayerFilter>> m_listener;
 
-    NewResult<> parse(pugi::xml_node const& node) override;
+    Result<> parse(pugi::xml_node const& node) override;
     CCNode* createNode() const override;
 };
 
@@ -64,6 +65,6 @@ private:
     std::unordered_map<std::string, std::shared_ptr<NodeEdit>> m_edits;
 
 public:
-    NewResult<> addFrom(ghc::filesystem::path const& path);
+    Result<> addFrom(ghc::filesystem::path const& path);
     void clear();
 };

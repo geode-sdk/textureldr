@@ -11,7 +11,7 @@
         m_##name = attr.as_##type();\
     }
 
-NewResult<std::shared_ptr<NodeEdit>> NodeEdit::from(
+Result<std::shared_ptr<NodeEdit>> NodeEdit::from(
     pugi::xml_node const& node,
     NodeEdit* parent
 ) {
@@ -34,18 +34,18 @@ NewResult<std::shared_ptr<NodeEdit>> NodeEdit::from(
         } break;
 
         default: {
-            return NewErr("Unknown node type \"" + std::string(node.name()) + "\"");
+            return Err("Unknown node type \"" + std::string(node.name()) + "\"");
         } break;
     }
     edit->m_parent = parent;
     auto res = edit->parse(node);
     if (!res) {
-        return NewErr(res.unwrapErr());
+        return Err(res.unwrapErr());
     }
-    return NewOk(edit);
+    return Ok(edit);
 }
 
-NewResult<> NodeEdit::parse(pugi::xml_node const& node) {
+Result<> NodeEdit::parse(pugi::xml_node const& node) {
     PARSE_ATTR(id, string);
     PARSE_ATTR(x, float);
     PARSE_ATTR(y, float);
@@ -58,13 +58,13 @@ NewResult<> NodeEdit::parse(pugi::xml_node const& node) {
         if (child.name() && strlen(child.name())) {
             auto c = NodeEdit::from(child, this);
             if (!c) {
-                return NewErr(c.unwrapErr());
+                return Err(c.unwrapErr());
             }
             m_children.push_back(c.unwrap());
         }
     }
 
-    return NewOk();
+    return Ok();
 }
 
 Layout* NodeEdit::createLayout(std::string const& expr) {
@@ -148,9 +148,9 @@ CCNode* NodeEdit::createNode() const {
 
 // LabelEdit
 
-NewResult<> LabelEdit::parse(pugi::xml_node const& node) {
+Result<> LabelEdit::parse(pugi::xml_node const& node) {
     auto res = NodeEdit::parse(node);
-    if (!res) return NewErr(res.unwrapErr());
+    if (!res) return Err(res.unwrapErr());
 
     PARSE_ATTR(text, string);
     PARSE_ATTR(font, string);
@@ -159,7 +159,7 @@ NewResult<> LabelEdit::parse(pugi::xml_node const& node) {
         m_text = val.as_string();
     }
 
-    return NewOk();
+    return Ok();
 }
 
 void LabelEdit::apply(CCNode* node) const {
@@ -183,14 +183,14 @@ CCNode* LabelEdit::createNode() const {
 
 // SpriteEdit
 
-NewResult<> SpriteEdit::parse(pugi::xml_node const& node) {
+Result<> SpriteEdit::parse(pugi::xml_node const& node) {
     auto res = NodeEdit::parse(node);
-    if (!res) return NewErr(res.unwrapErr());
+    if (!res) return Err(res.unwrapErr());
 
     PARSE_ATTR(src, string);
     PARSE_ATTR(frame, string);
 
-    return NewOk();
+    return Ok();
 }
 
 void SpriteEdit::apply(CCNode* node) const {
@@ -234,17 +234,18 @@ CCNode* SpriteEdit::createNode() const {
 
 // SceneEdit
 
-NewResult<> SceneEdit::parse(pugi::xml_node const& node) {
+Result<> SceneEdit::parse(pugi::xml_node const& node) {
     auto res = NodeEdit::parse(node);
-    if (!res) return NewErr(res.unwrapErr());
+    if (!res) return Err(res.unwrapErr());
 
-    m_handler = std::make_shared<AEnterLayerEventHandler>(
-        m_id, [this](AEnterLayerEvent* event) {
-            this->apply(event->getLayer());
-        }
+    m_listener = std::make_shared<EventListener<AEnterLayerFilter>>(
+        [this](AEnterLayerEvent* event) {
+            this->apply(event->layer);
+        },
+        AEnterLayerFilter(m_id)
     );
-
-    return NewOk();
+    
+    return Ok();
 }
 
 CCNode* SceneEdit::createNode() const {
@@ -253,15 +254,15 @@ CCNode* SceneEdit::createNode() const {
 
 // EditCollection
 
-NewResult<> EditCollection::addFrom(ghc::filesystem::path const& path) {
+Result<> EditCollection::addFrom(ghc::filesystem::path const& path) {
     auto data = file::readString(path);
     if (!data) {
-        return NewErr("Unable to read file: " + data.error());
+        return Err("Unable to read file: " + data.error());
     }
     pugi::xml_document doc;
     auto res = doc.load(data.value().c_str());
     if (res.status != pugi::status_ok) {
-        return NewErr("Unable to parse XML: " + std::string(res.description()));
+        return Err("Unable to parse XML: " + std::string(res.description()));
     }
 
     // start from "textureldr" node, or if that's not found just assume the 
@@ -275,11 +276,11 @@ NewResult<> EditCollection::addFrom(ghc::filesystem::path const& path) {
     for (auto scene : root.children("scene")) {
         auto editRes = NodeEdit::from(scene);
         if (!editRes) {
-            return NewErr(editRes.unwrapErr());
+            return Err(editRes.unwrapErr());
         }
         auto edit = editRes.unwrap();
         if (!edit->m_id) {
-            return NewErr("Scene is missing ID");
+            return Err("Scene is missing ID");
         }
         // merge existing handlers to avoid adding too many
         if (m_edits.count(edit->m_id.value())) {
@@ -291,7 +292,7 @@ NewResult<> EditCollection::addFrom(ghc::filesystem::path const& path) {
             m_edits.insert({ edit->m_id.value(), edit });
         }
     }
-    return NewOk();
+    return Ok();
 }
 
 void EditCollection::clear() {

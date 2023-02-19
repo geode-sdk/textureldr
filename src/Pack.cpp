@@ -3,10 +3,11 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/utils/file.hpp>
 
-Result<PackInfo> PackInfo::from(nlohmann::json const& json) {
+Result<PackInfo> PackInfo::from(json::Value const& json) {
     auto info = PackInfo();
 
-    auto checker = JsonChecker(json);
+    auto copyJson = json;
+    auto checker = JsonChecker(copyJson);
     auto root = checker.root("[pack.json]").obj();
 
     auto target = root.needs("textureldr").get<VersionInfo>();
@@ -23,15 +24,24 @@ Result<PackInfo> PackInfo::from(nlohmann::json const& json) {
     root.needs("version").into(info.m_version);
 
     // has single "creator" key?
-    if (auto creator = root.has("creator").as<value_t::string>()) {
+    if (auto creator = root.has("creator").as<json::Type::String>()) {
         info.m_creators = { creator.get<std::string>() };
     }
     // otherwise use "creators" key
     else {
-        root.needs("creators").into(info.m_creators);
+        // todo: make jsonchecker.into work for vectors
+        json::Array arr;
+        root.needs("creators").into(arr);
+        for (auto& a : arr) {
+            info.m_creators.push_back(a.as_string());
+        }
     }
 
-    root.has("edits").into(info.m_edits);
+    json::Array edits;
+    root.has("edits").into(edits);
+    for (auto& a : edits) {
+        info.m_edits.push_back(a.as_string());
+    }
 
     if (checker.isError()) {
         return Err(checker.getError());
@@ -95,7 +105,7 @@ Result<> Pack::parsePackJson() {
         if (!data) {
             return Err(data.error());
         }
-        auto res = PackInfo::from(nlohmann::json::parse(data.value()));
+        auto res = PackInfo::from(json::Value::from_str(data.value()));
         if (!res) {
             return Err(res.unwrapErr());
         }
@@ -122,10 +132,12 @@ Result<std::shared_ptr<Pack>> Pack::from(ghc::filesystem::path const& dir) {
     return Ok(pack);
 }
 
-void to_json(nlohmann::json& json, std::shared_ptr<Pack> const& pack) {
-    json["path"] = pack->getPath();
+json::Value json::Serialize<std::shared_ptr<Pack>>::to_json(std::shared_ptr<Pack> const& pack) {
+    return json::Object({
+        { "path", pack->getPath() }
+    });
 }
 
-void from_json(nlohmann::json const& json, std::shared_ptr<Pack>& pack) {
-    pack = Pack::from(json["path"]).unwrap();
+std::shared_ptr<Pack> json::Serialize<std::shared_ptr<Pack>>::from_json(json::Value const& value) {
+    return Pack::from(value["path"].as<ghc::filesystem::path>()).unwrap();
 }

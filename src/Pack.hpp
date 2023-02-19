@@ -19,7 +19,7 @@ struct PackInfo {
     std::vector<std::string> m_creators;
     std::vector<ghc::filesystem::path> m_edits;
 
-    static Result<PackInfo> from(nlohmann::json const& json);
+    static Result<PackInfo> from(json::Value const& json);
 };
 
 class Pack {
@@ -43,5 +43,8 @@ public:
     static Result<std::shared_ptr<Pack>> from(ghc::filesystem::path const& dir);
 };
 
-void to_json(nlohmann::json& json, std::shared_ptr<Pack> const& pack);
-void from_json(nlohmann::json const& json, std::shared_ptr<Pack>& pack);
+template <>
+struct json::Serialize<std::shared_ptr<Pack>> {
+    static json::Value to_json(std::shared_ptr<Pack> const& pack);
+    static std::shared_ptr<Pack> from_json(json::Value const& value);
+};

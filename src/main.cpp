@@ -1,5 +1,5 @@
 #include <Geode/loader/Mod.hpp>
-#include <Geode/modify/InternalMacros.hpp>
+#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include "PackSelectLayer.hpp"
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/IDManager.hpp>

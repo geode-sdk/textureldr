@@ -78,22 +78,14 @@ Layout* NodeEdit::createLayout(std::string const& expr) {
     switch (hash(name.c_str())) {
         case hash("column"): case hash("vertical"): {
             float gap = 5.f;
-            std::optional<float> align = std::nullopt;
-
             try { gap = std::stof(params[0]); } catch(...) {}
-            try { align = std::stof(params[1]); } catch(...) {}
-
-            return ColumnLayout::create(gap, align);
+            return ColumnLayout::create()->setGap(gap);
         } break;
 
         case hash("row"): case hash("horizontal"): {
             float gap = 5.f;
-            std::optional<float> align = std::nullopt;
-
             try { gap = std::stof(params[0]); } catch(...) {}
-            try { align = std::stof(params[1]); } catch(...) {}
-
-            return RowLayout::create(gap, align);
+            return RowLayout::create()->setGap(gap);
         } break;
 
         default: return nullptr;

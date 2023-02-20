@@ -29,11 +29,6 @@ Result<PackInfo> PackInfo::from(json::Value const& json) {
     }
     // otherwise use "creators" key
     else {
-        json::Value().as<std::vector<std::string>>();
-        json::Value().as<std::set<std::string>>();
-        json::Value().as<std::unordered_set<std::string>>();
-        json::Value().as<std::map<std::string, size_t>>();
-        json::Value().as<std::unordered_map<std::string, int>>();
         root.needs("creators").into(info.m_creators);
     }
 

@@ -67,28 +67,9 @@ void PackManager::moveToAvailable(std::shared_ptr<Pack> pack) {
     }
 }
 
-// todo: make getSavedValue work for vectors
-static std::vector<std::shared_ptr<Pack>> getSavedPacks(const char* key) {
-    auto arr = Mod::get()->getSavedValue<json::Array>(key);
-    std::vector<std::shared_ptr<Pack>> res;
-    for (auto& a : arr) {
-        res.push_back(json::Serialize<std::shared_ptr<Pack>>::from_json(a));
-    }
-    return res;
-}
-
-// todo: make setSavedValue work for vectors
-static void setSavedPacks(const char* key, std::vector<std::shared_ptr<Pack>> const& value) {
-    json::Array arr;
-    for (auto& a : value) {
-        arr.push_back(json::Serialize<std::shared_ptr<Pack>>::to_json(a));
-    }
-    Mod::get()->setSavedValue(key, arr);
-}
-
 void PackManager::savePacks() {
-    setSavedPacks("available", m_available);
-    setSavedPacks("applied", m_applied);
+    Mod::get()->setSavedValue("available", m_available);
+    Mod::get()->setSavedValue("applied", m_applied);
 }
 
 size_t PackManager::loadPacks() {
@@ -96,8 +77,8 @@ size_t PackManager::loadPacks() {
     (void)file::createDirectoryAll(packDir);
 
     // Load saved packs
-    m_available = getSavedPacks("available");
-    m_applied = getSavedPacks("applied");
+    m_available = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("available");
+    m_applied = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("applied");
 
     auto loaded = m_available.size() + m_applied.size();
 

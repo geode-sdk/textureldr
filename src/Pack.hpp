@@ -8,6 +8,7 @@
 #include <Geode/utils/VersionInfo.hpp>
 #include <Geode/ui/EnterLayerEvent.hpp>
 #include "Edit.hpp"
+#include <json/stl_serialize.hpp>
 
 USE_GEODE_NAMESPACE();
 

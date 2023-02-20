@@ -29,19 +29,15 @@ Result<PackInfo> PackInfo::from(json::Value const& json) {
     }
     // otherwise use "creators" key
     else {
-        // todo: make jsonchecker.into work for vectors
-        json::Array arr;
-        root.needs("creators").into(arr);
-        for (auto& a : arr) {
-            info.m_creators.push_back(a.as_string());
-        }
+        json::Value().as<std::vector<std::string>>();
+        json::Value().as<std::set<std::string>>();
+        json::Value().as<std::unordered_set<std::string>>();
+        json::Value().as<std::map<std::string, size_t>>();
+        json::Value().as<std::unordered_map<std::string, int>>();
+        root.needs("creators").into(info.m_creators);
     }
 
-    json::Array edits;
-    root.has("edits").into(edits);
-    for (auto& a : edits) {
-        info.m_edits.push_back(a.as_string());
-    }
+    root.has("edits").into(info.m_edits);
 
     if (checker.isError()) {
         return Err(checker.getError());

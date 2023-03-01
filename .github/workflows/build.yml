@@ -1,11 +1,3 @@
-
-
-#####################################
-#
-# Can't be used until layout branch is merged to main
-#
-#####################################
-
 name: Build Geode Mod
 
 on:
@@ -16,6 +8,8 @@ on:
 
 env:
   GEODE_SDK: ${{ github.workspace }}/sdk
+  GEODE_VERSION: v1.0.0-beta.8
+  CLI_VERSION: v1.4.1
   MOD_NAME: TextureLDR
   MOD_ID: geode.textureldr
 
@@ -28,7 +22,7 @@ jobs:
         - name: "Windows"
           bin_folder: "windows"
           os: windows-2019
-          extra_flags: '-G "Visual Studio 16 2019" -T host=x64 -A win32'
+          extra_flags: '-T host=x64 -A win32'
           out_paths:  './build/Release/*.dll'
           platform_suffix: 'win'
           
@@ -64,8 +58,9 @@ jobs:
         mkdir bin
         mkdir bin/nightly
         cd bin/nightly
-        curl -L https://github.com/geode-sdk/geode/releases/download/v1.0.0-beta/geode-v1.0.0-beta-${{ matrix.config.platform_suffix }}.zip -o geode-sdk.zip
+        curl -L https://github.com/geode-sdk/geode/releases/download/${{ env.GEODE_VERSION }}/geode-${{ env.GEODE_VERSION }}-${{ matrix.config.platform_suffix }}.zip -o geode-sdk.zip
         tar -xf geode-sdk.zip
+      
     - name: Configure CMake
       run: |
         cd ${{ github.workspace }}
@@ -95,8 +90,9 @@ jobs:
       
       - name: Download and Unzip CLI
         run: |
-          curl -L https://github.com/geode-sdk/cli/releases/download/v1.4.1/geode-cli-v1.4.1-win.zip -o geode-cli.zip
+          curl -L https://github.com/geode-sdk/cli/releases/download/${{ env.CLI_VERSION }}/geode-cli-${{ env.CLI_VERSION }}-win.zip -o geode-cli.zip
           tar -xf geode-cli.zip
+        
       - uses: actions/download-artifact@v3
         with:
           name: build-windows

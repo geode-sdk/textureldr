@@ -8,7 +8,7 @@
 #include <ghc/filesystem.hpp>
 #include <cocos2d.h>
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 struct NodeEdit : public std::enable_shared_from_this<NodeEdit> {
     NodeEdit* m_parent = nullptr;

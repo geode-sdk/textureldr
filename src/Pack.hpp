@@ -10,7 +10,7 @@
 #include "Edit.hpp"
 #include <json/stl_serialize.hpp>
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 struct PackInfo {
     VersionInfo m_textureldr;

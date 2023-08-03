@@ -6,7 +6,7 @@
 #include <Geode/ui/BasedButtonSprite.hpp>
 #include "PackManager.hpp"
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 class $modify(MyMenuLayer, MenuLayer) {
     bool init() {

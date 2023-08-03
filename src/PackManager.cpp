@@ -8,7 +8,7 @@
 #include <Geode/utils/ranges.hpp>
 #include <Geode/binding/GameManager.hpp>
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 PackManager* PackManager::get() {
     static auto inst = new PackManager;

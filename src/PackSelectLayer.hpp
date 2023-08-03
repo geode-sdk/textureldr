@@ -5,7 +5,7 @@
 #include <Geode/ui/ScrollLayer.hpp>
 #include "Pack.hpp"
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 class PackSelectLayer : public CCLayer {
 protected:

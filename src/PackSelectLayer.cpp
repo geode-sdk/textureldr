@@ -15,6 +15,8 @@ bool PackSelectLayer::init() {
     if (!CCLayer::init())
         return false;
     
+    this->setKeypadEnabled(true);
+
     this->addChild(createLayerBG());
 
     auto winSize = CCDirector::get()->getWinSize();

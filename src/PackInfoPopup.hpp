@@ -3,7 +3,7 @@
 #include <Geode/ui/Popup.hpp>
 #include "Pack.hpp"
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 class PackInfoPopup : public Popup<std::shared_ptr<Pack>> {
 protected:

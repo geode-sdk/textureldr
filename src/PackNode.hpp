@@ -3,7 +3,7 @@
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include "Pack.hpp"
 
-USE_GEODE_NAMESPACE();
+using namespace geode::prelude;
 
 class PackSelectLayer;
 

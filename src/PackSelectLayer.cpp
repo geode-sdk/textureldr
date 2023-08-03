@@ -130,7 +130,7 @@ void PackSelectLayer::keyBackClicked() {
 }
 
 void PackSelectLayer::onGoBack(CCObject*) {
-    switchToScene(MenuLayer::node());
+    CCDirector::get()->replaceScene(MenuLayer::scene(false));
 }
 
 void PackSelectLayer::onApply(CCObject*) {

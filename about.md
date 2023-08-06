@@ -1,3 +1,5 @@
-### The Texture Pack manager everyone loves.
+# Texture Loader
 
-Place your packs in `geode/config/geode.textureldr/packs`.
+A texture pack manager for Geode.
+
+The UI for the mod can be accessed in the main menu. There you can open the packs folder by clicking on the folder icon.

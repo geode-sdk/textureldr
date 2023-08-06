@@ -142,7 +142,7 @@ void PackSelectLayer::keyBackClicked() {
 }
 
 void PackSelectLayer::onGoBack(CCObject*) {
-    CCDirector::get()->replaceScene(MenuLayer::scene(false));
+    CCDirector::get()->replaceScene(CCTransitionFade::create(0.5, MenuLayer::scene(false)));
 }
 
 void PackSelectLayer::onApply(CCObject*) {

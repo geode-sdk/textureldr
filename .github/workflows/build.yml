@@ -45,8 +45,17 @@ jobs:
       with:
         submodules: recursive
         repository: geode-sdk/geode
-        # ref: v0.4.8
         path: ${{ env.GEODE_SDK }}
+      if: matrix.config.platform_suffix == 'mac'
+
+    # TODO: get rid of this once we release 1.1.0!!!!!!
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        repository: geode-sdk/geode
+        ref: 1.0.3
+        path: ${{ env.GEODE_SDK }}
+      if: matrix.config.platform_suffix == 'win'
      
     - uses: ilammy/msvc-dev-cmd@v1
       with:

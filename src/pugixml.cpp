@@ -5099,6 +5099,8 @@ namespace pugi
 		}
 	}
 
+#ifndef GEODE_IS_MACOS
+
 	PUGI__FN xml_document::xml_document(): _buffer(0)
 	{
 		create();
@@ -5108,6 +5110,8 @@ namespace pugi
 	{
 		destroy();
 	}
+
+#endif
 
 	PUGI__FN void xml_document::reset()
 	{

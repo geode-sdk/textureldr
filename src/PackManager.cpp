@@ -23,48 +23,23 @@ std::vector<std::shared_ptr<Pack>> PackManager::getAppliedPacks() const {
     return m_applied;
 }
 
-void PackManager::movePackUp(std::shared_ptr<Pack> pack) {
-    if (auto ix = ranges::indexOf(m_available, pack)) {
-        if (ix.value() > 0) {
-            ranges::move(m_available, pack, ix.value() - 1);
-        }
-    }
-    if (auto ix = ranges::indexOf(m_applied, pack)) {
-        if (ix.value() > 0) {
-            ranges::move(m_applied, pack, ix.value() - 1);
-        }
-    }
-}
-
-void PackManager::movePackDown(std::shared_ptr<Pack> pack) {
-    if (auto ix = ranges::indexOf(m_available, pack)) {
-        if (ix.value() < m_available.size() - 1) {
-            ranges::move(m_available, pack, ix.value() + 1);
-        }
-    }
-    if (auto ix = ranges::indexOf(m_applied, pack)) {
-        if (ix.value() < m_applied.size() - 1) {
-            ranges::move(m_applied, pack, ix.value() + 1);
+void PackManager::movePackToIdx(std::shared_ptr<Pack> pack, PackListType to, size_t index) {
+    auto& destination = to == PackListType::Applied ? m_applied : m_available;
+    if (ranges::contains(destination, pack)) {
+        ranges::move(destination, pack, index);
+    } else {
+        auto& from = to != PackListType::Applied ? m_applied : m_available;
+        ranges::remove(from, pack);
+        if (index < destination.size()) {
+            destination.insert(destination.begin() + index, pack);
+        } else {
+            destination.push_back(pack);
         }
     }
 }
 
 bool PackManager::isApplied(std::shared_ptr<Pack> pack) const {
     return ranges::contains(m_applied, pack);
-}
-
-void PackManager::moveToApplied(std::shared_ptr<Pack> pack) {
-    if (!ranges::contains(m_applied, pack)) {
-        m_applied.insert(m_applied.begin(), pack);
-        ranges::remove(m_available, pack);
-    }
-}
-
-void PackManager::moveToAvailable(std::shared_ptr<Pack> pack) {
-    if (!ranges::contains(m_available, pack)) {
-        m_available.insert(m_available.begin(), pack);
-        ranges::remove(m_applied, pack);
-    }
 }
 
 void PackManager::savePacks() {

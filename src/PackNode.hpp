@@ -2,6 +2,7 @@
 
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include "Pack.hpp"
+#include <functional>
 
 using namespace geode::prelude;
 
@@ -18,10 +19,6 @@ protected:
         float width
     );
 
-    void onMoveUp(CCObject*);
-    void onMoveDown(CCObject*);
-    void onMoveToApplied(CCObject*);
-    void onMoveToAvailable(CCObject*);
     void onView(CCObject*);
 
 public:
@@ -30,4 +27,8 @@ public:
         std::shared_ptr<Pack> pack,
         float width
     );
+
+    std::shared_ptr<Pack> getPack() { return m_pack; }
+
+    static constexpr float HEIGHT = 35.f;
 };

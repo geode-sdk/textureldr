@@ -4,6 +4,7 @@
 #include "PackManager.hpp"
 #include "PackSelectLayer.hpp"
 #include "PackInfoPopup.hpp"
+#include "DragThingy.hpp"
 
 bool PackNode::init(
     PackSelectLayer* layer,
@@ -13,7 +14,7 @@ bool PackNode::init(
     if (!CCNode::init())
         return false;
 
-    constexpr float HEIGHT = 35.f;
+    constexpr float HEIGHT = PackNode::HEIGHT;
     constexpr float SPACE_FOR_MENU = 50.f;
     constexpr float MOVE_OFFSET = 20.f;
     constexpr float SPACE_FOR_LOGO = HEIGHT;
@@ -53,83 +54,24 @@ bool PackNode::init(
     nameButton->setID("pack-name-button");
     menu->addChild(nameButton);
 
-    auto applyArrowSpr = CCSprite::createWithSpriteFrameName("navArrowBtn_001.png");
+    auto applyArrowSpr = CCSprite::createWithSpriteFrameName("edit_addCBtn_001.png");
     applyArrowSpr->setScale(.45f);
 
-    // add arrows to the left is the pack is applied
-    if (PackManager::get()->isApplied(pack)) {
-        applyArrowSpr->setFlipX(true);
-
-        auto unapplyBtn = CCMenuItemSpriteExtra::create(
-            applyArrowSpr, this, menu_selector(PackNode::onMoveToAvailable)
-        );
-        unapplyBtn->setID("unapply-pack-button");
-        unapplyBtn->setPosition(-MOVE_OFFSET, 0.f);
-        menu->addChild(unapplyBtn);
-
-        nameButton->setPositionX(
-            SPACE_FOR_LOGO + MOVE_OFFSET - PADDING +
-            nameLabel->getScaledContentSize().width / 2
-        );
-        logo->setPositionX(SPACE_FOR_MENU + SPACE_FOR_LOGO / 2 - PADDING);
-        menu->setPositionX(SPACE_FOR_MENU - MOVE_OFFSET);
-    }
-    // otherwise to the right
-    else {
-        auto applyBtn = CCMenuItemSpriteExtra::create(
-            applyArrowSpr, this, menu_selector(PackNode::onMoveToApplied)
-        );
-        applyBtn->setID("apply-pack-button");
-        applyBtn->setPosition(MOVE_OFFSET, 0.f);
-        menu->addChild(applyBtn);
-    }
-
-    auto moveUpBtnSpr = CCSprite::createWithSpriteFrameName("navArrowBtn_001.png");
-    moveUpBtnSpr->setRotation(-90.f);
-    moveUpBtnSpr->setScale(.35f);
-
-    auto moveUpBtn = CCMenuItemSpriteExtra::create(
-        moveUpBtnSpr, this, menu_selector(PackNode::onMoveUp)
+    DragThingy* dragHandle = DragThingy::create(
+        [=] { m_layer->startDragging(this); },
+        [=] (CCPoint offset) { m_layer->moveDrag(offset); },
+        [=] { m_layer->stopDrag(); }
     );
-    moveUpBtn->setID("move-pack-up-button");
-    moveUpBtn->setPosition(0.f, 7.f);
-    menu->addChild(moveUpBtn);
-
-    auto moveDownBtnSpr = CCSprite::createWithSpriteFrameName("navArrowBtn_001.png");
-    moveDownBtnSpr->setRotation(90.f);
-    moveDownBtnSpr->setFlipY(true);
-    moveDownBtnSpr->setScale(.35f);
-
-    auto moveDownBtn = CCMenuItemSpriteExtra::create(
-        moveDownBtnSpr, this, menu_selector(PackNode::onMoveDown)
-    );
-    moveDownBtn->setID("move-pack-down-button");
-    moveDownBtn->setPosition(0.f, -7.f);
-    menu->addChild(moveDownBtn);
+    applyArrowSpr->setAnchorPoint(ccp(0, 0));
+    dragHandle->addChild(applyArrowSpr);
+    dragHandle->setContentSize(applyArrowSpr->getScaledContentSize());
+    dragHandle->setID("apply-pack-button");
+    dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
+    this->addChild(dragHandle);
 
     this->addChild(menu);
 
     return true;
-}
-
-void PackNode::onMoveUp(CCObject*) {
-    PackManager::get()->movePackUp(m_pack);
-    m_layer->updateLists();
-}
-
-void PackNode::onMoveDown(CCObject*) {
-    PackManager::get()->movePackDown(m_pack);
-    m_layer->updateLists();
-}
-
-void PackNode::onMoveToApplied(CCObject*) {
-    PackManager::get()->moveToApplied(m_pack);
-    m_layer->updateLists();
-}
-
-void PackNode::onMoveToAvailable(CCObject*) {
-    PackManager::get()->moveToAvailable(m_pack);
-    m_layer->updateLists();
 }
 
 void PackNode::onView(CCObject*) {

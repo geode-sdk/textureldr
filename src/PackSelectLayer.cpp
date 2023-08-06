@@ -106,7 +106,8 @@ bool PackSelectLayer::init() {
 
 void PackSelectLayer::updateList(
     ScrollLayer* list,
-    std::vector<std::shared_ptr<Pack>> const& packs
+    std::vector<std::shared_ptr<Pack>> const& packs,
+    bool resetPos
 ) {
     list->m_contentLayer->removeAllChildren();
     float totalHeight = .0f;
@@ -126,12 +127,14 @@ void PackSelectLayer::updateList(
         node->setPositionY(node->getPositionY() + totalHeight);
     }
     list->m_contentLayer->setContentSize({ LAYER_SIZE.width, totalHeight });
-    list->moveToTop();
+    if (resetPos) {
+        list->moveToTop();
+    }
 }
 
-void PackSelectLayer::updateLists() {
-    this->updateList(m_availableList, PackManager::get()->getAvailablePacks());
-    this->updateList(m_appliedList, PackManager::get()->getAppliedPacks());
+void PackSelectLayer::updateLists(bool resetPos) {
+    this->updateList(m_availableList, PackManager::get()->getAvailablePacks(), resetPos);
+    this->updateList(m_appliedList, PackManager::get()->getAppliedPacks(), resetPos);
 }
 
 void PackSelectLayer::keyBackClicked() {
@@ -150,6 +153,122 @@ void PackSelectLayer::onApply(CCObject*) {
 
 void PackSelectLayer::onOpenFolder(CCObject*) {
     utils::file::openFolder(PackManager::get()->getPackDir());
+}
+
+void PackSelectLayer::startDragging(PackNode* node) {
+    m_draggingNode = node;
+    m_lastDragIdx = -1;
+    auto const pos = node->getParent()->convertToWorldSpace(node->getPosition());
+
+    // remove from the scroll layer
+    node->retain();
+    node->removeFromParentAndCleanup(false);
+    this->addChild(node);
+    node->release();
+    
+    node->setPosition(this->convertToNodeSpace(pos));
+
+    m_dragListFrom = this->whereDragList();
+}
+
+PackListType PackSelectLayer::whereDragList() {
+    if (!m_draggingNode) return PackListType::Available;
+    // it has the anchor point on bot left for some reason
+    auto x = m_draggingNode->getPosition().x + m_draggingNode->getContentSize().width / 2.f;
+    if (x > CCDirector::get()->getWinSize().width / 2.f) {
+        return PackListType::Applied;
+    } else {
+        return PackListType::Available;
+    }
+}
+
+void PackSelectLayer::moveDrag(CCPoint offset) {
+    m_draggingNode->setPosition(m_draggingNode->getPosition() + offset);
+    this->reorderDragging();
+}
+
+void PackSelectLayer::reorderDragging() {
+    auto const listTypeTo = this->whereDragList();
+
+    auto appliedList = std::make_pair(m_appliedList, PackManager::get()->getAppliedPacks());
+    auto availableList = std::make_pair(m_availableList, PackManager::get()->getAvailablePacks());
+    
+    auto& listTo = listTypeTo == PackListType::Applied ? appliedList : availableList;
+    auto& listFrom = listTypeTo != PackListType::Applied ? appliedList : availableList;
+
+    const auto listTop = listTo.first->convertToWorldSpace(
+        listTo.first->m_contentLayer->getPosition() + listTo.first->m_contentLayer->getContentSize()).y;
+    const auto nodeY = m_draggingNode->getPosition().y + m_draggingNode->getScaledContentSize().height / 2.f;
+
+    size_t targetIdx = std::max((listTop - nodeY) / PackNode::HEIGHT, 0.f);
+    
+    if (targetIdx == m_lastDragIdx && listTypeTo == m_dragListTo) return;
+
+    m_lastDragIdx = targetIdx;
+
+    if (listTypeTo != m_dragListTo) {
+        this->reorderList(listFrom.first, listFrom.second, -1);
+    }
+    this->reorderList(listTo.first, listTo.second, targetIdx);
+
+    m_dragListTo = listTypeTo;
+}
+
+void PackSelectLayer::reorderList(ScrollLayer* list, std::vector<std::shared_ptr<Pack>> const& packs, size_t skipIdx) {
+    const auto childForPack = [this, list] (const std::shared_ptr<Pack>& pack) -> PackNode* {
+        for (auto* child : CCArrayExt<PackNode*>(list->m_contentLayer->getChildren())) {
+            if (child->getPack() == pack) return child;
+        }
+        return nullptr;
+    };
+
+    auto const totalHeight = list->m_contentLayer->getContentSize().height;
+    
+    float y = totalHeight;
+    int visualIdx = 0;
+    for (int i = 0; i < packs.size(); ++i) {
+        auto pack = packs[i];
+
+        if (visualIdx == skipIdx) {
+            y -= PackNode::HEIGHT;
+            ++visualIdx;
+        }
+
+        if (pack == m_draggingNode->getPack()) {
+            continue;
+        }
+
+        auto* child = childForPack(pack);
+
+        y -= PackNode::HEIGHT;
+
+        child->setPositionY(y);
+
+        ++visualIdx;
+    }
+}
+
+void PackSelectLayer::stopDrag() {
+    PackManager::get()->movePackToIdx(m_draggingNode->getPack(), m_dragListTo, m_lastDragIdx);
+
+    m_draggingNode->removeFromParent();
+
+    m_draggingNode = nullptr;
+
+    this->updateLists(false);
+
+    if (m_dragListFrom != m_dragListTo) {
+        auto* from = m_dragListFrom == PackListType::Applied ? m_appliedList : m_availableList;
+        auto* to = m_dragListTo == PackListType::Applied ? m_appliedList : m_availableList;
+        // scroll source list up
+        if (from->m_contentLayer->getPositionY() < 0.f) {
+            from->m_contentLayer->setPositionY(from->m_contentLayer->getPositionY() + PackNode::HEIGHT);
+        }
+        // scroll destination list down
+        if (to->m_contentLayer->getPositionY() + to->m_contentLayer->getContentSize().height > to->getContentSize().height + 1.f) {
+            to->m_contentLayer->setPositionY(to->m_contentLayer->getPositionY() - PackNode::HEIGHT);
+        }
+    }
 }
 
 PackSelectLayer* PackSelectLayer::create() {

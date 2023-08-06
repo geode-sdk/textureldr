@@ -27,4 +27,6 @@ public:
     void savePacks();
     size_t loadPacks();
     void applyPacks(geode::cocos::CreateLayerFunc func = nullptr);
+
+    ghc::filesystem::path getPackDir() const;
 };

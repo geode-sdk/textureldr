@@ -29,4 +29,6 @@ public:
 
     void onGoBack(CCObject*);
     void onApply(CCObject*);
+
+    void onOpenFolder(CCObject*);
 };

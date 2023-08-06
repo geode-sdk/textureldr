@@ -42,6 +42,13 @@ bool PackSelectLayer::init() {
     applyBtn->setPosition(0.f, -winSize.height / 2 + 25.f);
     menu->addChild(applyBtn);
 
+    auto folderBtn = CCMenuItemSpriteExtra::create(
+        CCSprite::createWithSpriteFrameName("gj_folderBtn_001.png"),
+        this, menu_selector(PackSelectLayer::onOpenFolder)
+    );
+    folderBtn->setPosition(winSize.width / 2.f - 25.f, -winSize.height / 2.f + 25.f);
+    menu->addChild(folderBtn);
+
     this->addChild(menu);
 
     // available packs list
@@ -139,6 +146,10 @@ void PackSelectLayer::onApply(CCObject*) {
     PackManager::get()->applyPacks(+[]() -> CCLayer* {
         return PackSelectLayer::create();
     });
+}
+
+void PackSelectLayer::onOpenFolder(CCObject*) {
+    utils::file::openFolder(PackManager::get()->getPackDir());
 }
 
 PackSelectLayer* PackSelectLayer::create() {

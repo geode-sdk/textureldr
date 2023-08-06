@@ -72,8 +72,12 @@ void PackManager::savePacks() {
     Mod::get()->setSavedValue("applied", m_applied);
 }
 
+ghc::filesystem::path PackManager::getPackDir() const {
+    return Mod::get()->getConfigDir() / "packs";
+}
+
 size_t PackManager::loadPacks() {
-    auto packDir = Mod::get()->getConfigDir() / "packs";
+    auto packDir = this->getPackDir();
     (void)file::createDirectoryAll(packDir);
 
     // Load saved packs

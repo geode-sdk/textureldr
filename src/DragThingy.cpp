@@ -16,7 +16,7 @@ bool DragThingy::init(std::function<void()> onClick, std::function<void(CCPoint)
 }
 
 bool DragThingy::ccTouchBegan(CCTouch* touch, CCEvent*) {
-    auto const point = this->getParent()->convertTouchToNodeSpace(touch);
+    auto const point = this->getParent()->convertToNodeSpace(touch->getLocation());
     auto const rect = this->boundingBox();
     if (rect.containsPoint(point)) {
         if (m_onClick)

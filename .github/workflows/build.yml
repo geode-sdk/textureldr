@@ -53,7 +53,7 @@ jobs:
       with:
         submodules: recursive
         repository: geode-sdk/geode
-        ref: 1.0.3
+        ref: ${{ env.GEODE_VERSION }}
         path: ${{ env.GEODE_SDK }}
       if: matrix.config.platform_suffix == 'win'
      

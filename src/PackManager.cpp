@@ -93,7 +93,7 @@ void PackManager::addPackPaths() {
     for (auto& pack : m_available) {
         (void)pack->unapply();
     }
-    for (auto& pack : m_applied) {
+    for (auto& pack : ranges::reverse(m_applied)) {
         (void)pack->apply();
     }
 }

@@ -10,8 +10,8 @@ env:
   GEODE_SDK: ${{ github.workspace }}/sdk
   GEODE_VERSION: v1.0.3
   CLI_VERSION: v2.4.2
-  MOD_NAME: TextureLDR
-  MOD_ID: geode.textureldr
+  MOD_NAME: TextureLoader
+  MOD_ID: geode.texture-loader
 
 jobs:
   build:

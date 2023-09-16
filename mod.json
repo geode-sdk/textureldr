@@ -1,6 +1,6 @@
 {
-	"geode": "v1.0.0",
-	"version": "v1.0.1",
+	"geode": "v1.3.0",
+	"version": "v1.0.2",
 	"id": "geode.texture-loader",
 	"name": "Texture Loader",
 	"developer": "Geode Team",

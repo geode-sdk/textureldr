@@ -54,7 +54,9 @@ size_t PackManager::loadPacks() {
     auto packDir = this->getPackDir();
     (void)file::createDirectoryAll(packDir);
 
-    int loaded = 0;
+    size_t loaded = 0;
+
+    std::vector<std::shared_ptr<Pack>> found;
 
     // Load new packs
     for (auto& dir : ghc::filesystem::directory_iterator(packDir)) {
@@ -63,22 +65,29 @@ size_t PackManager::loadPacks() {
             if (!packRes) {
                 log::warn("Unable to load pack {}: {}", dir, packRes.unwrapErr());
             } else {
-                m_available.push_back(packRes.unwrap());
+                found.push_back(packRes.unwrap());
                 loaded++;
             }
         }
     }
 
+    std::vector<std::shared_ptr<Pack>> newApplied;
     auto savedApplied = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("applied");
-    for (auto& pack : savedApplied) {
-        const auto pred = [&](auto& other) {
+    // on startup (when no packs have been loaded yet) iterate through savedApplied
+    // this whole code would be a lot simpler if the "applied" saved value wasnt just updated on closing the game..
+    auto& iterApplied = (m_available.empty() && m_applied.empty()) ? savedApplied : m_applied;
+    for (auto& pack : iterApplied) {
+        const auto pred = [&](auto const& other) {
             return pack->getPath() == other->getPath();
         };
-        if (ranges::contains(m_available, pred)) {
-            ranges::remove(m_available, pred);
-            m_applied.push_back(pack);
+        if (ranges::contains(found, pred)) {
+            ranges::remove(found, pred);
+            newApplied.push_back(pack);
         }
     }
+
+    m_applied = newApplied;
+    m_available = found;
 
     this->addPackPaths();
 

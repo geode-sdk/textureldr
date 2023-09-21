@@ -49,6 +49,12 @@ bool PackSelectLayer::init() {
     folderBtn->setPosition(winSize.width / 2.f - 25.f, -winSize.height / 2.f + 25.f);
     menu->addChild(folderBtn);
 
+    auto reloadSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
+    reloadSpr->setScale(.8f);
+    auto reloadBtn = CCMenuItemSpriteExtra::create(reloadSpr, this, menu_selector(PackSelectLayer::onReloadPacks));
+    reloadBtn->setPosition(-winSize.width / 2.f + 25.f, -winSize.height / 2.f + 25.f);
+    menu->addChild(reloadBtn);
+
     this->addChild(menu);
 
     // available packs list
@@ -153,6 +159,12 @@ void PackSelectLayer::onApply(CCObject*) {
 
 void PackSelectLayer::onOpenFolder(CCObject*) {
     utils::file::openFolder(PackManager::get()->getPackDir());
+}
+
+void PackSelectLayer::onReloadPacks(CCObject*) {
+    size_t count = PackManager::get()->loadPacks();
+    this->updateLists();
+    Notification::create(fmt::format("Loaded {} packs", count), NotificationIcon::Success, 0.5f)->show();
 }
 
 void PackSelectLayer::startDragging(PackNode* node) {

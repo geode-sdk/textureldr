@@ -47,6 +47,7 @@ public:
     void onApply(CCObject*);
 
     void onOpenFolder(CCObject*);
+    void onReloadPacks(CCObject*);
 
     void startDragging(PackNode* node);
     void moveDrag(CCPoint offset);

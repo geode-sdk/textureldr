@@ -43,7 +43,6 @@ bool PackManager::isApplied(std::shared_ptr<Pack> pack) const {
 }
 
 void PackManager::savePacks() {
-    Mod::get()->setSavedValue("available", m_available);
     Mod::get()->setSavedValue("applied", m_applied);
 }
 
@@ -55,23 +54,11 @@ size_t PackManager::loadPacks() {
     auto packDir = this->getPackDir();
     (void)file::createDirectoryAll(packDir);
 
-    // Load saved packs
-    m_available = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("available");
-    m_applied = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("applied");
-
-    auto loaded = m_available.size() + m_applied.size();
+    int loaded = 0;
 
     // Load new packs
     for (auto& dir : ghc::filesystem::directory_iterator(packDir)) {
-        if (
-            ghc::filesystem::is_directory(dir) && 
-            !ranges::contains(m_available, [dir](auto pack) {
-                return pack->getPath() == dir;
-            }) &&
-            !ranges::contains(m_applied, [dir](auto pack) {
-                return pack->getPath() == dir;
-            })
-        ) {
+        if (ghc::filesystem::is_directory(dir)) {
             auto packRes = Pack::from(dir);
             if (!packRes) {
                 log::warn("Unable to load pack {}: {}", dir, packRes.unwrapErr());
@@ -79,6 +66,17 @@ size_t PackManager::loadPacks() {
                 m_available.push_back(packRes.unwrap());
                 loaded++;
             }
+        }
+    }
+
+    auto savedApplied = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("applied");
+    for (auto& pack : savedApplied) {
+        const auto pred = [&](auto& other) {
+            return pack->getPath() == other->getPath();
+        };
+        if (ranges::contains(m_available, pred)) {
+            ranges::remove(m_available, pred);
+            m_applied.push_back(pack);
         }
     }
 

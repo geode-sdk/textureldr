@@ -54,13 +54,19 @@ bool PackNode::init(
     nameButton->setID("pack-name-button");
     menu->addChild(nameButton);
 
-    auto applyArrowSpr = CCSprite::createWithSpriteFrameName("edit_addCBtn_001.png");
-    applyArrowSpr->setScale(.45f);
+    auto applyArrowSpr = CCSprite::create("dragIcon.png"_spr);
+    applyArrowSpr->setScale(.6f);
 
     DragThingy* dragHandle = DragThingy::create(
-        [=] { m_layer->startDragging(this); },
+        [=] {
+            m_draggingBg->setVisible(true);
+            m_layer->startDragging(this);
+        },
         [=] (CCPoint offset) { m_layer->moveDrag(offset); },
-        [=] { m_layer->stopDrag(); }
+        [=] {
+            m_draggingBg->setVisible(false);
+            m_layer->stopDrag();
+        }
     );
     applyArrowSpr->setAnchorPoint(ccp(0, 0));
     dragHandle->addChild(applyArrowSpr);
@@ -68,6 +74,20 @@ bool PackNode::init(
     dragHandle->setID("apply-pack-button");
     dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
     this->addChild(dragHandle);
+
+    auto dragBg = CCScale9Sprite::create(
+        "square02b_001.png", { 0, 0, 80, 80 }
+    );
+    dragBg->setColor({ 0, 0, 0 });
+    dragBg->setOpacity(90);
+    const float bgScaling = 0.5f;
+    dragBg->setContentSize(this->getContentSize() / bgScaling);
+    dragBg->setScale(bgScaling);
+    dragBg->setPosition({ width / 2.f, HEIGHT / 2.f });
+    dragBg->setZOrder(-10);
+    this->addChild(dragBg);
+    m_draggingBg = dragBg;
+    dragBg->setVisible(false);
 
     this->addChild(menu);
 

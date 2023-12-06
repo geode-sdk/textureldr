@@ -5,5 +5,10 @@
 	"name": "Texture Loader",
 	"developer": "Geode Team",
 	"description": "Texture Pack Manager",
-	"early-load": true
+	"early-load": true,
+	"resources": {
+		"sprites": [
+			"resources/*.png"
+		]
+	}
 }

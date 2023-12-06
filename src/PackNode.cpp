@@ -33,8 +33,12 @@ bool PackNode::init(
     auto menu = CCMenu::create();
     menu->setPosition(menuPosX, HEIGHT / 2);
     menu->setID("pack-button-menu");
+
+    auto logo = CCSprite::create((pack->getPath() / "pack.png").string().c_str());
     
-    auto logo = CCSprite::createWithSpriteFrameName("geode.loader/no-logo.png");
+    if (!logo) {
+        logo = CCSprite::createWithSpriteFrameName("geode.loader/no-logo.png");
+    }
     logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
     limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
     this->addChild(logo);

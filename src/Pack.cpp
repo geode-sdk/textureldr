@@ -3,7 +3,7 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/utils/file.hpp>
 
-Result<PackInfo> PackInfo::from(json::Value const& json) {
+Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     auto info = PackInfo();
 
     auto copyJson = json;
@@ -24,7 +24,7 @@ Result<PackInfo> PackInfo::from(json::Value const& json) {
     root.needs("version").into(info.m_version);
 
     // has single "creator" key?
-    if (auto creator = root.has("creator").as<json::Type::String>()) {
+    if (auto creator = root.has("creator").as<matjson::Type::String>()) {
         info.m_creators = { creator.get<std::string>() };
     }
     // otherwise use "creators" key
@@ -96,7 +96,7 @@ Result<> Pack::parsePackJson() {
         if (!data) {
             return Err(data.error());
         }
-        auto res = PackInfo::from(json::Value::from_str(data.value()));
+        auto res = PackInfo::from(matjson::Value::from_str(data.value()));
         if (!res) {
             return Err(res.unwrapErr());
         }
@@ -123,12 +123,12 @@ Result<std::shared_ptr<Pack>> Pack::from(ghc::filesystem::path const& dir) {
     return Ok(pack);
 }
 
-json::Value json::Serialize<std::shared_ptr<Pack>>::to_json(std::shared_ptr<Pack> const& pack) {
-    return json::Object({
+matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::to_json(std::shared_ptr<Pack> const& pack) {
+    return matjson::Object({
         { "path", pack->getPath() }
     });
 }
 
-std::shared_ptr<Pack> json::Serialize<std::shared_ptr<Pack>>::from_json(json::Value const& value) {
+std::shared_ptr<Pack> matjson::Serialize<std::shared_ptr<Pack>>::from_json(matjson::Value const& value) {
     return Pack::from(value["path"].as<ghc::filesystem::path>()).unwrap();
 }

@@ -16,7 +16,7 @@ struct PackInfo {
     std::string m_id;
     std::string m_name;
     VersionInfo m_version;
-    std::vector<std::string> m_creators;
+    std::vector<std::string> m_authors;
 
     static Result<PackInfo> from(matjson::Value const& json);
 };

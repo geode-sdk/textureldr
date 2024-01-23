@@ -24,13 +24,13 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     root.needs("id").into(info.m_id);
     root.needs("version").into(info.m_version);
 
-    // has single "creator" key?
-    if (auto creator = root.has("creator").as<matjson::Type::String>()) {
-        info.m_creators = { creator.get<std::string>() };
+    // has single "author" key?
+    if (auto author = root.has("author").as<matjson::Type::String>()) {
+        info.m_authors = { author.get<std::string>() };
     }
-    // otherwise use "creators" key
+    // otherwise use "authors" key
     else {
-        root.needs("creators").into(info.m_creators);
+        root.needs("authors").into(info.m_authors);
     }
 
     if (checker.isError()) {

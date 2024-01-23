@@ -37,10 +37,6 @@ void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType 
     }
 }
 
-bool PackManager::isApplied(const std::shared_ptr<Pack>& pack) const {
-    return ranges::contains(m_applied, pack);
-}
-
 void PackManager::savePacks() {
     Mod::get()->setSavedValue("applied", m_applied);
 }

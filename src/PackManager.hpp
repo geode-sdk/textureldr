@@ -24,8 +24,6 @@ public:
 
     void movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index);
 
-    [[nodiscard]] bool isApplied(const std::shared_ptr<Pack>& pack) const;
-
     void savePacks();
     size_t loadPacks();
     void applyPacks(geode::cocos::CreateLayerFunc func = nullptr);

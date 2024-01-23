@@ -1,12 +1,11 @@
 #include "PackManager.hpp"
 #include <Geode/loader/Mod.hpp>
 #include <Geode/loader/ModEvent.hpp>
-#include <Geode/loader/ModJsonTest.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/utils/file.hpp>
-#include <Geode/utils/map.hpp>
 #include <Geode/utils/ranges.hpp>
 #include <Geode/binding/GameManager.hpp>
+#include <utility>
 
 using namespace geode::prelude;
 
@@ -23,7 +22,7 @@ std::vector<std::shared_ptr<Pack>> PackManager::getAppliedPacks() const {
     return m_applied;
 }
 
-void PackManager::movePackToIdx(std::shared_ptr<Pack> pack, PackListType to, size_t index) {
+void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index) {
     auto& destination = to == PackListType::Applied ? m_applied : m_available;
     if (ranges::contains(destination, pack)) {
         ranges::move(destination, pack, index);
@@ -31,14 +30,14 @@ void PackManager::movePackToIdx(std::shared_ptr<Pack> pack, PackListType to, siz
         auto& from = to != PackListType::Applied ? m_applied : m_available;
         ranges::remove(from, pack);
         if (index < destination.size()) {
-            destination.insert(destination.begin() + index, pack);
+            destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
         } else {
             destination.push_back(pack);
         }
     }
 }
 
-bool PackManager::isApplied(std::shared_ptr<Pack> pack) const {
+bool PackManager::isApplied(const std::shared_ptr<Pack>& pack) const {
     return ranges::contains(m_applied, pack);
 }
 
@@ -46,7 +45,7 @@ void PackManager::savePacks() {
     Mod::get()->setSavedValue("applied", m_applied);
 }
 
-ghc::filesystem::path PackManager::getPackDir() const {
+ghc::filesystem::path PackManager::getPackDir() {
     return Mod::get()->getConfigDir() / "packs";
 }
 
@@ -107,7 +106,7 @@ void PackManager::addPackPaths() {
 
 void PackManager::applyPacks(CreateLayerFunc func) {
     this->addPackPaths();
-    reloadTextures(func);
+    reloadTextures(std::move(func));
 }
 
 $on_mod(Loaded) {

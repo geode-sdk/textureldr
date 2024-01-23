@@ -1,11 +1,13 @@
 #include "DragThingy.hpp"
 
+#include <utility>
+
 bool DragThingy::init(std::function<void()> onClick, std::function<void(CCPoint)> onMove, std::function<void()> onRelease) {
     if (!CCLayer::init()) return false;
 
-    m_onClick = onClick;
-    m_onMove = onMove;
-    m_onRelease = onRelease;
+    m_onClick = std::move(onClick);
+    m_onMove = std::move(onMove);
+    m_onRelease = std::move(onRelease);
 
     this->setTouchMode(kCCTouchesOneByOne);
     this->setTouchEnabled(true);
@@ -38,7 +40,7 @@ void DragThingy::ccTouchEnded(CCTouch* touch, CCEvent*) {
 
 DragThingy* DragThingy::create(std::function<void()> onClick, std::function<void(CCPoint)> onMove, std::function<void()> onRelease) {
     auto ret = new DragThingy;
-    if (ret && ret->init(onClick, onMove, onRelease)) {
+    if (ret->init(std::move(onClick), std::move(onMove), std::move(onRelease))) {
         ret->autorelease();
         return ret;
     }

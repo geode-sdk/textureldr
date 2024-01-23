@@ -14,5 +14,5 @@ protected:
     ghc::filesystem::path getPathInPack(const char* filename) const;
 
 public:
-    static PackInfoPopup* create(std::shared_ptr<Pack> pack);
+    static PackInfoPopup* create(const std::shared_ptr<Pack>& pack);
 };

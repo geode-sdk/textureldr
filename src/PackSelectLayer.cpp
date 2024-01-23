@@ -1,6 +1,5 @@
 #include "PackSelectLayer.hpp"
 #include <Geode/ui/General.hpp>
-#include <Geode/ui/ListView.hpp>
 #include <Geode/utils/cocos.hpp>
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/binding/MenuLayer.hpp>
@@ -194,7 +193,7 @@ PackListType PackSelectLayer::whereDragList() {
     }
 }
 
-void PackSelectLayer::moveDrag(CCPoint offset) {
+void PackSelectLayer::moveDrag(const CCPoint& offset) {
     m_draggingNode->setPosition(m_draggingNode->getPosition() + offset);
     this->reorderDragging();
 }
@@ -212,8 +211,8 @@ void PackSelectLayer::reorderDragging() {
         listTo.first->m_contentLayer->getPosition() + listTo.first->m_contentLayer->getContentSize()).y;
     const auto nodeY = m_draggingNode->getPosition().y + m_draggingNode->getScaledContentSize().height / 2.f;
 
-    size_t targetIdx = std::max((listTop - nodeY) / PackNode::HEIGHT, 0.f);
-    
+    auto targetIdx = static_cast<size_t>(std::max((listTop - nodeY) / PackNode::HEIGHT, 0.f));
+
     if (targetIdx == m_lastDragIdx && listTypeTo == m_dragListTo) return;
 
     m_lastDragIdx = targetIdx;
@@ -227,7 +226,7 @@ void PackSelectLayer::reorderDragging() {
 }
 
 void PackSelectLayer::reorderList(ScrollLayer* list, std::vector<std::shared_ptr<Pack>> const& packs, size_t skipIdx) {
-    const auto childForPack = [this, list] (const std::shared_ptr<Pack>& pack) -> PackNode* {
+    const auto childForPack = [list] (const std::shared_ptr<Pack>& pack) -> PackNode* {
         for (auto* child : CCArrayExt<PackNode*>(list->m_contentLayer->getChildren())) {
             if (child->getPack() == pack) return child;
         }
@@ -238,9 +237,7 @@ void PackSelectLayer::reorderList(ScrollLayer* list, std::vector<std::shared_ptr
     
     float y = totalHeight;
     int visualIdx = 0;
-    for (int i = 0; i < packs.size(); ++i) {
-        auto pack = packs[i];
-
+    for (const auto& pack : packs) {
         if (visualIdx == skipIdx) {
             y -= PackNode::HEIGHT;
             ++visualIdx;
@@ -285,7 +282,7 @@ void PackSelectLayer::stopDrag() {
 
 PackSelectLayer* PackSelectLayer::create() {
     auto ret = new PackSelectLayer;
-    if (ret && ret->init()) {
+    if (ret->init()) {
         ret->autorelease();
         return ret;
     }

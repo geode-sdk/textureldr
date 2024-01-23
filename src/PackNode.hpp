@@ -16,7 +16,7 @@ protected:
 
     bool init(
         PackSelectLayer* layer,
-        std::shared_ptr<Pack> pack,
+        const std::shared_ptr<Pack>& pack,
         float width
     );
 
@@ -25,7 +25,7 @@ protected:
 public:
     static PackNode* create(
         PackSelectLayer* layer,
-        std::shared_ptr<Pack> pack,
+        const std::shared_ptr<Pack>& pack,
         float width
     );
 

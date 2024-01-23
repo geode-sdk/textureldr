@@ -1,5 +1,4 @@
 #include "PackNode.hpp"
-#include <Geode/binding/ButtonSprite.hpp>
 #include <Geode/binding/CCMenuItemToggler.hpp>
 #include "PackManager.hpp"
 #include "PackSelectLayer.hpp"
@@ -8,7 +7,7 @@
 
 bool PackNode::init(
     PackSelectLayer* layer,
-    std::shared_ptr<Pack> pack,
+    const std::shared_ptr<Pack>& pack,
     float width
 ) {
     if (!CCNode::init())
@@ -22,7 +21,7 @@ bool PackNode::init(
 
     float labelWidth = width - SPACE_FOR_MENU - SPACE_FOR_LOGO;
     float menuPosX = width - SPACE_FOR_MENU + MOVE_OFFSET;
-    
+
     m_pack = pack;
     m_layer = layer;
 
@@ -35,7 +34,7 @@ bool PackNode::init(
     menu->setID("pack-button-menu");
 
     auto logo = CCSprite::create((pack->getPath() / "pack.png").string().c_str());
-    
+
     if (!logo) {
         logo = CCSprite::createWithSpriteFrameName("geode.loader/no-logo.png");
     }
@@ -62,12 +61,12 @@ bool PackNode::init(
     applyArrowSpr->setScale(.6f);
 
     DragThingy* dragHandle = DragThingy::create(
-        [=] {
+        [=, this] {
             m_draggingBg->setVisible(true);
             m_layer->startDragging(this);
         },
-        [=] (CCPoint offset) { m_layer->moveDrag(offset); },
-        [=] {
+        [=, this] (const CCPoint& offset) { m_layer->moveDrag(offset); },
+        [=, this] {
             m_draggingBg->setVisible(false);
             m_layer->stopDrag();
         }
@@ -104,11 +103,11 @@ void PackNode::onView(CCObject*) {
 
 PackNode* PackNode::create(
     PackSelectLayer* layer,
-    std::shared_ptr<Pack> pack,
+    const std::shared_ptr<Pack>& pack,
     float width
 ) {
     auto ret = new PackNode;
-    if (ret && ret->init(layer, pack, width)) {
+    if (ret->init(layer, pack, width)) {
         ret->autorelease();
         return ret;
     }

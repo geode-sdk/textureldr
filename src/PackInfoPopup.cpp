@@ -8,8 +8,12 @@ protected:
     void setFntFile(ghc::filesystem::path fnt) {
         auto conf = FNTConfigLoadFile(fnt.string().c_str());
         m_sFntFile = fnt.string();
-        CC_SAFE_RETAIN(conf);
-        CC_SAFE_RELEASE(m_pConfiguration);
+        if (!conf) {
+            log::error("!conf ?????");
+            return;
+        }
+        conf->retain();
+        m_pConfiguration->release();
         m_pConfiguration = conf;
         conf->m_sAtlasName = fnt.replace_extension("png").string();
 
@@ -25,14 +29,14 @@ public:
         ghc::filesystem::path const& fnt
     ) {
         auto label = CCLabelBMFont::create();
-        static_cast<WackyBypassFont*>(label)->setFntFile(fnt);
+        static_cast<WackyBypassFont*>(label)->setFntFile(fnt); // NOLINT(*-pro-type-static-cast-downcast)
         label->setString(text);
         return label;
     }
 };
 
 ghc::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
-    std::string suffix = "";
+    std::string suffix;
     switch (CCDirector::get()->getLoadedTextureQuality()) {
         case kTextureQualityHigh: {
             suffix = "-uhd";
@@ -139,18 +143,16 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
     return true;
 }
 
-PackInfoPopup* PackInfoPopup::create(std::shared_ptr<Pack> pack) {
+PackInfoPopup* PackInfoPopup::create(const std::shared_ptr<Pack>& pack) {
     auto ret = new PackInfoPopup;
-    if (ret) {
-        ret->m_pack = pack;
-        if (ret->init(
-            320.f, 200.f, pack,
-            ret->getPathInPack("GJ_square01.png").string().c_str()
-        )) {
-            ret->autorelease();
-            return ret;
-        }
-        delete ret;
+    ret->m_pack = pack;
+    if (ret->init(
+        320.f, 200.f, pack,
+        ret->getPathInPack("GJ_square01.png").string().c_str()
+    )) {
+        ret->autorelease();
+        return ret;
     }
+    delete ret;
     return nullptr;
 }

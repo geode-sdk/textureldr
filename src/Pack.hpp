@@ -29,12 +29,12 @@ protected:
     Result<> parsePackJson();
 
 public:
-    ghc::filesystem::path getPath() const;
-    std::string getDisplayName() const;
-    std::string getID() const;
+    [[nodiscard]] ghc::filesystem::path getPath() const;
+    [[nodiscard]] std::string getDisplayName() const;
+    [[nodiscard]] std::string getID() const;
 
-    Result<> apply();
-    Result<> unapply() const;
+    [[nodiscard]] Result<> apply();
+    [[nodiscard]] Result<> unapply() const;
 
     ~Pack();
 

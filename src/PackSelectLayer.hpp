@@ -50,6 +50,6 @@ public:
     void onReloadPacks(CCObject*);
 
     void startDragging(PackNode* node);
-    void moveDrag(CCPoint offset);
+    void moveDrag(const CCPoint& offset);
     void stopDrag();
 };

@@ -19,16 +19,16 @@ protected:
 public:
     static PackManager* get();
 
-    std::vector<std::shared_ptr<Pack>> getAvailablePacks() const;
-    std::vector<std::shared_ptr<Pack>> getAppliedPacks() const;
+    [[nodiscard]] std::vector<std::shared_ptr<Pack>> getAvailablePacks() const;
+    [[nodiscard]] std::vector<std::shared_ptr<Pack>> getAppliedPacks() const;
 
-    void movePackToIdx(std::shared_ptr<Pack> pack, PackListType to, size_t index);
+    void movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index);
 
-    bool isApplied(std::shared_ptr<Pack> pack) const;
+    [[nodiscard]] bool isApplied(const std::shared_ptr<Pack>& pack) const;
 
     void savePacks();
     size_t loadPacks();
     void applyPacks(geode::cocos::CreateLayerFunc func = nullptr);
 
-    ghc::filesystem::path getPackDir() const;
+    [[nodiscard]] static ghc::filesystem::path getPackDir();
 };

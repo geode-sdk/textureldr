@@ -32,8 +32,6 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
         root.needs("creators").into(info.m_creators);
     }
 
-    root.has("edits").into(info.m_edits);
-
     if (checker.isError()) {
         return Err(checker.getError());
     }
@@ -62,31 +60,11 @@ Result<> Pack::apply() {
         .m_id = this->getID(),
         .m_paths = { m_path.string() }
     });
-    if (m_info) {
-        // clear old edits
-        m_edits.clear();
-
-        // add new edits
-        for (auto& edit : m_info.value().m_edits) {
-            if (ghc::filesystem::exists(m_path / edit)) {
-                auto res = m_edits.addFrom(m_path / edit);
-                if (!res) {
-                    log::warn(
-                        "Unable to load edits from {}: {}",
-                        m_path / edit, res.unwrapErr()
-                    );
-                }
-            } else {
-                log::warn("Unable to find edit {}", m_path / edit);
-            }
-        }
-    }
     return Ok();
 }
 
-Result<> Pack::unapply() {
+Result<> Pack::unapply() const {
     CCFileUtils::get()->removeTexturePack(this->getID());
-    m_edits.clear();
     return Ok();
 }
 

@@ -7,7 +7,6 @@
 #include <Geode/utils/Result.hpp>
 #include <Geode/utils/VersionInfo.hpp>
 #include <Geode/ui/EnterLayerEvent.hpp>
-#include "Edit.hpp"
 #include <matjson/stl_serialize.hpp>
 
 using namespace geode::prelude;
@@ -18,7 +17,6 @@ struct PackInfo {
     std::string m_name;
     VersionInfo m_version;
     std::vector<std::string> m_creators;
-    std::vector<ghc::filesystem::path> m_edits;
 
     static Result<PackInfo> from(matjson::Value const& json);
 };
@@ -27,7 +25,6 @@ class Pack {
 protected:
     ghc::filesystem::path m_path;
     std::optional<PackInfo> m_info;
-    EditCollection m_edits;
 
     Result<> parsePackJson();
 
@@ -37,7 +34,7 @@ public:
     std::string getID() const;
 
     Result<> apply();
-    Result<> unapply();
+    Result<> unapply() const;
 
     ~Pack();
 

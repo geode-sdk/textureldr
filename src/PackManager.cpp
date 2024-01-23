@@ -84,14 +84,14 @@ size_t PackManager::loadPacks() {
     m_applied = newApplied;
     m_available = found;
 
-    this->addPackPaths();
+    this->updateAppliedPacks();
 
     log::info("Loaded {} packs", loaded);
 
     return loaded;
 }
 
-void PackManager::addPackPaths() {
+void PackManager::updateAppliedPacks() {
     for (auto& pack : m_available) {
         (void)pack->unapply();
     }
@@ -101,7 +101,7 @@ void PackManager::addPackPaths() {
 }
 
 void PackManager::applyPacks(CreateLayerFunc func) {
-    this->addPackPaths();
+    this->updateAppliedPacks();
     reloadTextures(std::move(func));
 }
 

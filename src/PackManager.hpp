@@ -14,7 +14,7 @@ protected:
     std::vector<std::shared_ptr<Pack>> m_available;
     std::vector<std::shared_ptr<Pack>> m_applied;
 
-    void addPackPaths();
+    void updateAppliedPacks();
 
 public:
     static PackManager* get();

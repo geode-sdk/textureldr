@@ -15,7 +15,8 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     if (checker.isError()) {
         return Err(checker.getError());
     }
-    if (target > VersionInfo(1, 0, 99999999)) {
+    auto current = Mod::get()->getVersion();
+    if (target > VersionInfo(current.getMajor(), current.getMinor(), 99999999)) {
         return Err("Pack targets newer version of TextureLdr");
     }
     info.m_textureldr = target;

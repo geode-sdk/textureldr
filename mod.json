@@ -1,9 +1,9 @@
 {
 	"geode": "v2.0.0",
-	"version": "v1.4.0",
+	"version": "v1.4.1",
 	"gd": {
 		"win": "2.204",
-		"android": "2.200"
+		"android": "2.205"
 	},
 	"id": "geode.texture-loader",
 	"name": "Texture Loader",

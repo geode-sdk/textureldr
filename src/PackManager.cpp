@@ -50,7 +50,7 @@ ghc::filesystem::path PackManager::getPackDir() {
 }
 
 size_t PackManager::loadPacks() {
-    auto packDir = this->getPackDir();
+    auto packDir = PackManager::getPackDir();
     (void)file::createDirectoryAll(packDir);
 
     size_t loaded = 0;

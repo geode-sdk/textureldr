@@ -13,7 +13,8 @@ protected:
             return;
         }
         conf->retain();
-        m_pConfiguration->release();
+        if (m_pConfiguration)
+            m_pConfiguration->release();
         m_pConfiguration = conf;
         conf->m_sAtlasName = fnt.replace_extension("png").string();
 

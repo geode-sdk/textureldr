@@ -76,6 +76,7 @@ bool PackNode::init(
     dragHandle->setContentSize(applyArrowSpr->getScaledContentSize());
     dragHandle->setID("apply-pack-button");
     dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
+    dragHandle->setTouchPriority(-130);
     this->addChild(dragHandle);
 
     auto dragBg = CCScale9Sprite::create(

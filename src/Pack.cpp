@@ -75,7 +75,7 @@ Result<> Pack::unapply() const {
 
 Result<> Pack::parsePackJson() {
     try {
-        auto data = file::readString(m_path / "pack.json");
+        auto data = file::readString(m_resourcesPath / "pack.json");
         if (!data) {
             return Err(data.error());
         }
@@ -86,7 +86,7 @@ Result<> Pack::parsePackJson() {
         m_info = res.unwrap();
         return Ok();
     } catch(std::exception& e) {
-        return Err("Unable to parse pack.json: " + std::string(e.what()));
+        return Err("Unable to parse pack.json: {}", e.what());
     }
 }
 
@@ -97,6 +97,10 @@ Result<> Pack::setup() {
     auto optPath = this->findResourcesPath(m_unzippedPath);
     if (optPath) {
         m_resourcesPath = *optPath;
+    }
+    // TODO: read this from the zip before extracting.. somehow
+    if (ghc::filesystem::exists(m_resourcesPath / "pack.json")) {
+        GEODE_UNWRAP(this->parsePackJson());
     }
     return Ok();
 }
@@ -120,7 +124,7 @@ Result<> Pack::extract() {
     std::error_code ec;
     auto modifiedDate = ghc::filesystem::last_write_time(m_path, ec);
     if (ec) {
-        return Err("Unable get last_write_time", ec.message());
+        return Err("Unable get last_write_time: {}", ec.message());
     }
     auto modifiedCount = std::chrono::duration_cast<std::chrono::milliseconds>(modifiedDate.time_since_epoch());
     auto modifiedHash = std::to_string(modifiedCount.count());
@@ -224,10 +228,6 @@ Result<std::shared_ptr<Pack>> Pack::from(ghc::filesystem::path const& dir) {
     }
     auto pack = std::make_shared<Pack>();
     pack->m_path = dir;
-    // TODO: read this from the zip before extracting.. somehow
-    if (ghc::filesystem::exists(dir / "pack.json")) {
-        GEODE_UNWRAP(pack->parsePackJson());
-    }
     GEODE_UNWRAP(pack->setup());
     return Ok(pack);
 }

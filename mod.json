@@ -15,5 +15,6 @@
 		"sprites": [
 			"resources/*.png"
 		]
-	}
+	},
+	"repository": "https://github.com/geode-sdk/textureldr"
 }

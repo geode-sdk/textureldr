@@ -55,8 +55,8 @@ ghc::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
         fname.stem().string() + suffix + fname.extension().string()
     );
 
-    if (ghc::filesystem::exists(m_pack->getPath() / fname)) {
-        return m_pack->getPath() / fname;
+    if (ghc::filesystem::exists(m_pack->getResourcesPath() / fname)) {
+        return m_pack->getResourcesPath() / fname;
     } else {
         return dirs::getGameDir() / "Resources" / fname;
     }

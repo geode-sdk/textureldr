@@ -40,8 +40,12 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     return Ok(info);
 }
 
-ghc::filesystem::path Pack::getPath() const {
+ghc::filesystem::path Pack::getOriginPath() const {
     return m_path;
+}
+
+ghc::filesystem::path Pack::getResourcesPath() const {
+    return m_resourcesPath;
 }
 
 std::string Pack::getID() const {
@@ -59,7 +63,7 @@ std::string Pack::getDisplayName() const {
 Result<> Pack::apply() {
     CCFileUtils::get()->addTexturePack(CCTexturePack {
         .m_id = this->getID(),
-        .m_paths = { m_path.string() }
+        .m_paths = { this->getResourcesPath().string() }
     });
     return Ok();
 }
@@ -86,25 +90,95 @@ Result<> Pack::parsePackJson() {
     }
 }
 
+Result<> Pack::setup() {
+    m_unzippedPath = m_path;
+    m_resourcesPath = m_path;
+    GEODE_UNWRAP(this->extract());
+    this->findResourcesPath();
+    return Ok();
+}
+
+Result<> Pack::extract() {
+    // this method is only for zips and stuff
+    if (ghc::filesystem::is_directory(m_path)) return Ok();
+
+    auto const filename = m_path.filename().string();
+    if (!filename.ends_with(".zip") && !filename.ends_with(".rar")) {
+        return Err("Expected zip or rar");
+    }
+
+    auto extractPath = Mod::get()->getSaveDir() / "unzipped" / this->getID();
+    (void) utils::file::createDirectoryAll(extractPath);
+
+    auto datePath = extractPath / "modified-at";
+    std::string currentHash = file::readString(datePath).unwrapOr("");
+
+    std::error_code ec;
+    auto modifiedDate = ghc::filesystem::last_write_time(m_path, ec);
+    if (ec) {
+        return Err("Unable get last_write_time", ec.message());
+    }
+    auto modifiedCount = std::chrono::duration_cast<std::chrono::milliseconds>(modifiedDate.time_since_epoch());
+    auto modifiedHash = std::to_string(modifiedCount.count());
+    if (currentHash == modifiedHash) {
+        m_unzippedPath = extractPath;
+        log::debug("Same hash for {} detected, skipping unzip", this->getID());
+        return Ok();
+    }
+    log::debug("Hash mismatch detected, unzipping {}", this->getID());
+
+    ghc::filesystem::remove_all(extractPath, ec);
+    if (ec) {
+        return Err("Unable to delete temp dir: {}", ec.message());
+    }
+
+    (void)utils::file::createDirectoryAll(extractPath);
+    auto res = file::writeString(datePath, modifiedHash);
+    if (!res) {
+        log::warn("Failed to write modified date of geode zip: {}", res.unwrapErr());
+    }
+
+    GEODE_UNWRAP_INTO(auto unzip, file::Unzip::create(m_path));
+    GEODE_UNWRAP(unzip.extractAllTo(extractPath));
+
+    m_unzippedPath = extractPath;
+    m_resourcesPath = extractPath;
+
+    return Ok();
+}
+
+void Pack::findResourcesPath() {
+    // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
+
+    if (ghc::filesystem::exists(m_unzippedPath / "pack.json") || ghc::filesystem::exists(m_unzippedPath / "pack.png")) {
+        // this pack is made for texture loader, so it should be correct already
+        return;
+    }
+
+    // TODO: implement this lol
+}
+
 Pack::~Pack() {
     (void)this->unapply();
 }
 
 Result<std::shared_ptr<Pack>> Pack::from(ghc::filesystem::path const& dir) {
+    if (!ghc::filesystem::exists(dir)) {
+        return Err("Path does not exist");
+    }
     auto pack = std::make_shared<Pack>();
     pack->m_path = dir;
+    // TODO: read this from the zip before extracting.. somehow
     if (ghc::filesystem::exists(dir / "pack.json")) {
-        auto res = pack->parsePackJson();
-        if (!res) {
-            return Err(res.unwrapErr());
-        }
+        GEODE_UNWRAP(pack->parsePackJson());
     }
+    GEODE_UNWRAP(pack->setup());
     return Ok(pack);
 }
 
 matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::to_json(std::shared_ptr<Pack> const& pack) {
     return matjson::Object({
-        { "path", pack->getPath() }
+        { "path", pack->getOriginPath() }
     });
 }
 

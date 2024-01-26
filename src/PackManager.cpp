@@ -38,7 +38,7 @@ void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType 
 }
 
 void PackManager::savePacks() {
-    Mod::get()->setSavedValue("applied", m_applied);
+    Mod::get()->getSaveContainer()["applied"] = m_applied;
 }
 
 ghc::filesystem::path PackManager::getPackDir() {
@@ -55,25 +55,35 @@ size_t PackManager::loadPacks() {
 
     // Load new packs
     for (auto& dir : ghc::filesystem::directory_iterator(packDir)) {
-        if (ghc::filesystem::is_directory(dir)) {
-            auto packRes = Pack::from(dir);
-            if (!packRes) {
-                log::warn("Unable to load pack {}: {}", dir, packRes.unwrapErr());
-            } else {
-                found.push_back(packRes.unwrap());
-                loaded++;
+        auto packRes = Pack::from(dir);
+        if (!packRes) {
+            log::warn("Unable to load pack {}: {}", dir, packRes.unwrapErr());
+        } else {
+            found.push_back(packRes.unwrap());
+            loaded++;
+        }
+    }
+
+
+    std::vector<std::shared_ptr<Pack>> newApplied;
+    
+    std::vector<std::shared_ptr<Pack>> savedApplied;
+    // manually do this so we can skip packs that fail
+    for (auto const& obj : Mod::get()->getSavedValue<matjson::Array>("applied")) {
+        if (obj.is_object() && obj.contains("path") && obj["path"].is_string()) {
+            auto res = Pack::from(obj["path"].as<ghc::filesystem::path>());
+            if (res) {
+                savedApplied.push_back(res.unwrap());
             }
         }
     }
 
-    std::vector<std::shared_ptr<Pack>> newApplied;
-    auto savedApplied = Mod::get()->getSavedValue<std::vector<std::shared_ptr<Pack>>>("applied");
     // on startup (when no packs have been loaded yet) iterate through savedApplied
     // this whole code would be a lot simpler if the "applied" saved value wasnt just updated on closing the game..
     auto& iterApplied = (m_available.empty() && m_applied.empty()) ? savedApplied : m_applied;
     for (auto& pack : iterApplied) {
         const auto pred = [&](auto const& other) {
-            return pack->getPath() == other->getPath();
+            return pack->getID() == other->getID();
         };
         if (ranges::contains(found, pred)) {
             ranges::remove(found, pred);

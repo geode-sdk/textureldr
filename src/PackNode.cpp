@@ -33,7 +33,7 @@ bool PackNode::init(
     menu->setPosition(menuPosX, HEIGHT / 2);
     menu->setID("pack-button-menu");
 
-    auto logo = CCSprite::create((pack->getPath() / "pack.png").string().c_str());
+    auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
 
     if (!logo) {
         logo = CCSprite::createWithSpriteFrameName("geode.loader/no-logo.png");

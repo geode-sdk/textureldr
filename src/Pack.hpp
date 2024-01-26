@@ -24,12 +24,22 @@ struct PackInfo {
 class Pack {
 protected:
     ghc::filesystem::path m_path;
+    ghc::filesystem::path m_unzippedPath;
+    ghc::filesystem::path m_resourcesPath;
     std::optional<PackInfo> m_info;
 
     Result<> parsePackJson();
 
+    Result<> setup();
+    Result<> extract();
+    void findResourcesPath();
+
 public:
-    [[nodiscard]] ghc::filesystem::path getPath() const;
+    // Returns where the pack comes from. typically the folder, but will also point to the .zip files
+    // for zipped packs
+    [[nodiscard]] ghc::filesystem::path getOriginPath() const;
+    // Returns the path where the resources are, whether the pack is a folder or it was unzipped by the mod
+    [[nodiscard]] ghc::filesystem::path getResourcesPath() const;
     [[nodiscard]] std::string getDisplayName() const;
     [[nodiscard]] std::string getID() const;
 

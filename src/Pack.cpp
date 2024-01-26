@@ -94,7 +94,10 @@ Result<> Pack::setup() {
     m_unzippedPath = m_path;
     m_resourcesPath = m_path;
     GEODE_UNWRAP(this->extract());
-    this->findResourcesPath();
+    auto optPath = this->findResourcesPath(m_unzippedPath);
+    if (optPath) {
+        m_resourcesPath = *optPath;
+    }
     return Ok();
 }
 
@@ -102,9 +105,10 @@ Result<> Pack::extract() {
     // this method is only for zips and stuff
     if (ghc::filesystem::is_directory(m_path)) return Ok();
 
-    auto const filename = m_path.filename().string();
-    if (!filename.ends_with(".zip") && !filename.ends_with(".rar")) {
-        return Err("Expected zip or rar");
+    auto const fileExt = m_path.extension().string();
+    // TODO: we dont support rar, lol
+    if (fileExt != ".zip" && fileExt != ".apk") {
+        return Err("Expected zip or apk");
     }
 
     auto extractPath = Mod::get()->getSaveDir() / "unzipped" / this->getID();
@@ -122,7 +126,6 @@ Result<> Pack::extract() {
     auto modifiedHash = std::to_string(modifiedCount.count());
     if (currentHash == modifiedHash) {
         m_unzippedPath = extractPath;
-        log::debug("Same hash for {} detected, skipping unzip", this->getID());
         return Ok();
     }
     log::debug("Hash mismatch detected, unzipping {}", this->getID());
@@ -132,10 +135,10 @@ Result<> Pack::extract() {
         return Err("Unable to delete temp dir: {}", ec.message());
     }
 
-    (void)utils::file::createDirectoryAll(extractPath);
+    (void) utils::file::createDirectoryAll(extractPath);
     auto res = file::writeString(datePath, modifiedHash);
     if (!res) {
-        log::warn("Failed to write modified date of geode zip: {}", res.unwrapErr());
+        log::warn("Failed to write modified date of extracted pack: {}", res.unwrapErr());
     }
 
     GEODE_UNWRAP_INTO(auto unzip, file::Unzip::create(m_path));
@@ -147,15 +150,68 @@ Result<> Pack::extract() {
     return Ok();
 }
 
-void Pack::findResourcesPath() {
+std::optional<ghc::filesystem::path> Pack::findResourcesPath(ghc::filesystem::path targetPath) {
     // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
 
-    if (ghc::filesystem::exists(m_unzippedPath / "pack.json") || ghc::filesystem::exists(m_unzippedPath / "pack.png")) {
-        // this pack is made for texture loader, so it should be correct already
-        return;
+    if (m_path.extension().string() == ".apk") {
+        // resources can only be in one place! very easy
+        return m_unzippedPath / "assets";
     }
 
-    // TODO: implement this lol
+    if (ghc::filesystem::exists(targetPath / "pack.json") || ghc::filesystem::exists(targetPath / "pack.png")) {
+        // this pack is made for texture loader, so it should be correct already
+        return targetPath;
+    }
+
+    const auto existsDir = [](auto path) {
+        return ghc::filesystem::exists(path) && ghc::filesystem::is_directory(path);
+    };
+
+    if (existsDir(targetPath / "Resources")) {
+        // its probably there, i hope
+        return targetPath / "Resources";
+    }
+
+    // 2.2 icons folder
+    if (existsDir(targetPath / "icons")) {
+        return targetPath;
+    }
+
+    // Look for any plist files, or png files ending in -uhd -hd or starting in GJ_
+
+    for (auto const& file : ghc::filesystem::directory_iterator(targetPath, ghc::filesystem::directory_options::skip_permission_denied)) {
+        if (!file.is_regular_file()) continue;
+
+        auto const path = file.path();
+        auto const name = path.stem().string();
+        auto const ext = path.extension().string();
+
+        if (ext == ".plist") {
+            return targetPath;
+        } else if (ext == ".png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd"))) {
+            return targetPath;
+        } else if (ext == ".ogg") {
+            return targetPath;
+        } else if (ext == ".mp3") {
+            return targetPath;
+        }
+    }
+
+    // ok, look recursively through the folders then
+    for (auto const& dir : ghc::filesystem::directory_iterator(targetPath, ghc::filesystem::directory_options::skip_permission_denied)) {
+        if (!dir.is_directory()) continue;
+
+        auto const path = dir.path();
+
+        // TODO: this might skip over texture packs that set geode mod textures..
+        // though, they should be using pack.json or pack.png anyways!
+        auto const opt = this->findResourcesPath(path);
+        if (opt) {
+            return *opt;
+        }
+    }
+
+    return std::nullopt;
 }
 
 Pack::~Pack() {

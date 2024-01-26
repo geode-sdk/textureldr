@@ -32,7 +32,7 @@ protected:
 
     Result<> setup();
     Result<> extract();
-    void findResourcesPath();
+    std::optional<ghc::filesystem::path> findResourcesPath(ghc::filesystem::path targetPath);
 
 public:
     // Returns where the pack comes from. typically the folder, but will also point to the .zip files

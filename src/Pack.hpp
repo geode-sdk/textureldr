@@ -45,4 +45,7 @@ template <>
 struct matjson::Serialize<std::shared_ptr<Pack>> {
     static matjson::Value to_json(std::shared_ptr<Pack> const& pack);
     static std::shared_ptr<Pack> from_json(matjson::Value const& value);
+    static bool is_json(matjson::Value const& value) {
+        return value.is_object();
+    }
 };

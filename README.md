@@ -19,7 +19,7 @@ The zip for that pack looks like this: \
 
 This pack will:
 * Change the background gradient image `GJ_gradientBG-hd.png`
-* Edit the textures for a mod (geode.loader)
+* Edit the textures for a mod (geode.loader) [More info about that](#changing-mod-resources)
 * Have a custom icon `pack.png`
 
 The structure of pack.json is as follows:
@@ -33,3 +33,14 @@ The structure of pack.json is as follows:
 }
 ```
 The first value, `textureldr` must be the version of Texture Loader you're targetting. Currently, only the `name` value is used for anything
+
+## Changing Mod Resources
+To edit the resources for a mod, simply put them in a folder that has the same name as the mod id.
+
+For example: *Currently* BetterInfo has this texture: \
+![image](https://github.com/geode-sdk/textureldr/assets/26722564/6d887c5c-854d-4278-a5b0-08a823a52d37)
+
+You can easily change it in your texture pack by doing this: \
+![image](https://github.com/geode-sdk/textureldr/assets/26722564/776b9e06-555a-49e9-8b99-10d93338831b) \
+![image](https://github.com/geode-sdk/textureldr/assets/26722564/fa58a2bf-1406-49a5-9e5e-9c1c111e324d) \
+

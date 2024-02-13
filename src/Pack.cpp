@@ -1,6 +1,7 @@
 #include "Pack.hpp"
 #include <Geode/utils/JsonValidation.hpp>
 #include <Geode/loader/Loader.hpp>
+#include <Geode/loader/Mod.hpp>
 #include <Geode/utils/file.hpp>
 
 Result<PackInfo> PackInfo::from(matjson::Value const& json) {

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <optional>
-#include <ghc/filesystem.hpp>
+#include <ghc/fs_fwd.hpp>
 #include <memory>
 #include <Geode/utils/Result.hpp>
 #include <Geode/utils/VersionInfo.hpp>

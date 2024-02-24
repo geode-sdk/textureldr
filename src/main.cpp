@@ -19,7 +19,7 @@ class $modify(MyMenuLayer, MenuLayer) {
             CCSprite::createWithSpriteFrameName("gj_folderBtn_001.png"),
             this, menu_selector(MyMenuLayer::onTextureLdr)
         );
-        button->setID("texture-loader-button");
+        button->setID("texture-loader-button"_spr);
         menu->addChild(button);
         menu->updateLayout();
 

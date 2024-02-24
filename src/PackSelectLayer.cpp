@@ -15,17 +15,23 @@ bool PackSelectLayer::init() {
     if (!CCLayer::init())
         return false;
     
+    this->setID("PackSelectLayer");
+
     this->setKeypadEnabled(true);
 
-    this->addChild(createLayerBG());
+    auto background = createLayerBG();
+    background->setID("background");
+    this->addChild(background);
 
     auto winSize = CCDirector::get()->getWinSize();
 
     auto title = CCLabelBMFont::create("Texture Packs", "goldFont.fnt");
     title->setPosition(winSize.width / 2, winSize.height - 20.f);
+    title->setID("texture-packs-text");
     this->addChild(title);
 
     auto menu = CCMenu::create();
+    menu->setID("menu");
     menu->setZOrder(10);
 
     auto backBtn = CCMenuItemSpriteExtra::create(
@@ -33,6 +39,7 @@ bool PackSelectLayer::init() {
         this, menu_selector(PackSelectLayer::onGoBack)
     );
     backBtn->setPosition(-winSize.width / 2 + 25.f, winSize.height / 2 - 25.f);
+    backBtn->setID("back-button");
     menu->addChild(backBtn);
 
     auto applyBtn = CCMenuItemSpriteExtra::create(
@@ -40,6 +47,7 @@ bool PackSelectLayer::init() {
         this, menu_selector(PackSelectLayer::onApply)
     );
     applyBtn->setPosition(0.f, -winSize.height / 2 + 25.f);
+    applyBtn->setID("apply-button");
     menu->addChild(applyBtn);
 
     auto folderBtn = CCMenuItemSpriteExtra::create(
@@ -47,12 +55,14 @@ bool PackSelectLayer::init() {
         this, menu_selector(PackSelectLayer::onOpenFolder)
     );
     folderBtn->setPosition(winSize.width / 2.f - 25.f, -winSize.height / 2.f + 25.f);
+    folderBtn->setID("folder-button");
     menu->addChild(folderBtn);
 
     auto reloadSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     reloadSpr->setScale(.8f);
     auto reloadBtn = CCMenuItemSpriteExtra::create(reloadSpr, this, menu_selector(PackSelectLayer::onReloadPacks));
     reloadBtn->setPosition(-winSize.width / 2.f + 25.f, -winSize.height / 2.f + 25.f);
+    reloadBtn->setID("reload-button");
     menu->addChild(reloadBtn);
 
     this->addChild(menu);
@@ -64,6 +74,7 @@ bool PackSelectLayer::init() {
         winSize / 2 + CCPoint { -120, LAYER_SIZE.height / 2 + 15.f }
     );
     availableTitle->setScale(.65f);
+    availableTitle->setID("available-text");
     this->addChild(availableTitle);
 
     auto availableListBG = CCScale9Sprite::create(
@@ -73,12 +84,14 @@ bool PackSelectLayer::init() {
     availableListBG->setOpacity(90);
     availableListBG->setContentSize(LAYER_SIZE);
     availableListBG->setPosition(winSize / 2 + CCPoint { -120, 0 });
+    availableListBG->setID("available-list-background");
     this->addChild(availableListBG);
 
     m_availableList = ScrollLayer::create(LAYER_SIZE);
     m_availableList->setPosition(
         winSize / 2 + CCPoint { -120, 0 } - LAYER_SIZE / 2
     );
+    m_availableList->setID("available-list");
     this->addChild(m_availableList);
 
     // applied packs list
@@ -88,6 +101,7 @@ bool PackSelectLayer::init() {
         winSize / 2 + CCPoint { 120, LAYER_SIZE.height / 2 + 15.f }
     );
     appliedTitle->setScale(.65f);
+    appliedTitle->setID("applied-text");
     this->addChild(appliedTitle);
 
     auto appliedListBG = CCScale9Sprite::create(
@@ -97,12 +111,14 @@ bool PackSelectLayer::init() {
     appliedListBG->setOpacity(90);
     appliedListBG->setContentSize(LAYER_SIZE);
     appliedListBG->setPosition(winSize / 2 + CCPoint { 120, 0 });
+    appliedListBG->setID("applied-list-background");
     this->addChild(appliedListBG);
 
     m_appliedList = ScrollLayer::create(LAYER_SIZE);
     m_appliedList->setPosition(
         winSize / 2 + CCPoint { 120, 0 } - LAYER_SIZE / 2
     );
+    m_appliedList->setID("applied-list");
     this->addChild(m_appliedList);
 
     this->updateLists();

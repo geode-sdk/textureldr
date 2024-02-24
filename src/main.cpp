@@ -15,10 +15,12 @@ class $modify(MyMenuLayer, MenuLayer) {
 
         auto menu = this->getChildByID("right-side-menu");
 
-        menu->addChild(CCMenuItemSpriteExtra::create(
+        auto button = CCMenuItemSpriteExtra::create(
             CCSprite::createWithSpriteFrameName("gj_folderBtn_001.png"),
             this, menu_selector(MyMenuLayer::onTextureLdr)
-        ));
+        );
+        button->setID("texture-loader-button");
+        menu->addChild(button);
         menu->updateLayout();
 
         return true;

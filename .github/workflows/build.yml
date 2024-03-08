@@ -37,7 +37,6 @@ jobs:
         with:
           combine: true
           sdk: nightly
-          configure-args: '-DSKIP_BUILDING_CODEGEN=OFF'
           target: ${{ matrix.config.target }}
       
   package:

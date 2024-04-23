@@ -30,7 +30,11 @@ bool DragThingy::ccTouchBegan(CCTouch* touch, CCEvent*) {
 
 void DragThingy::ccTouchMoved(CCTouch* touch, CCEvent*) {
     if (m_onMove)
+#ifndef GEODE_IS_IOS
         m_onMove(touch->getDelta());
+#else
+        m_onMove(ccpSub(touch->getLocation(), CCDirector::sharedDirector()->convertToGL(touch->m_prevPoint))); // TODO
+#endif
 }
 
 void DragThingy::ccTouchEnded(CCTouch* touch, CCEvent*) {

@@ -5,6 +5,14 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64")
 
 project(TextureLoader VERSION 1.0.0)
 
+if(${GEODE_TARGET_PLATFORM} STREQUAL "iOS")
+  message(STATUS "building for ios :3")
+  unset(CMAKE_OSX_ARCHITECTURES)
+  set(CMAKE_OSX_ARCHITECTURES arm64)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0")
+  set(CMAKE_SYSTEM_NAME "iOS")
+endif()
+
 file(GLOB SOURCES
 	src/*.cpp
 )

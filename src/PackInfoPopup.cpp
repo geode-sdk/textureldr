@@ -29,7 +29,11 @@ public:
         const char* text,
         ghc::filesystem::path const& fnt
     ) {
+#ifdef GEODE_IS_IOS
+        auto label = CCLabelBMFont::create("", "");
+#else
         auto label = CCLabelBMFont::create();
+#endif
         static_cast<WackyBypassFont*>(label)->setFntFile(fnt); // NOLINT(*-pro-type-static-cast-downcast)
         label->setString(text);
         return label;

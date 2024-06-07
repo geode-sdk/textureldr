@@ -41,11 +41,11 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     return Ok(info);
 }
 
-ghc::filesystem::path Pack::getOriginPath() const {
+std::filesystem::path Pack::getOriginPath() const {
     return m_path;
 }
 
-ghc::filesystem::path Pack::getResourcesPath() const {
+std::filesystem::path Pack::getResourcesPath() const {
     return m_resourcesPath;
 }
 
@@ -100,7 +100,7 @@ Result<> Pack::setup() {
         m_resourcesPath = *optPath;
     }
     // TODO: read this from the zip before extracting.. somehow
-    if (ghc::filesystem::exists(m_resourcesPath / "pack.json")) {
+    if (std::filesystem::exists(m_resourcesPath / "pack.json")) {
         GEODE_UNWRAP(this->parsePackJson());
     }
     return Ok();
@@ -108,7 +108,7 @@ Result<> Pack::setup() {
 
 Result<> Pack::extract() {
     // this method is only for zips and stuff
-    if (ghc::filesystem::is_directory(m_path)) return Ok();
+    if (std::filesystem::is_directory(m_path)) return Ok();
 
     auto const fileExt = m_path.extension().string();
     // TODO: we dont support rar, lol
@@ -123,7 +123,7 @@ Result<> Pack::extract() {
     std::string currentHash = file::readString(datePath).unwrapOr("");
 
     std::error_code ec;
-    auto modifiedDate = ghc::filesystem::last_write_time(m_path, ec);
+    auto modifiedDate = std::filesystem::last_write_time(m_path, ec);
     if (ec) {
         return Err("Unable get last_write_time: {}", ec.message());
     }
@@ -135,7 +135,7 @@ Result<> Pack::extract() {
     }
     log::debug("Hash mismatch detected, unzipping {}", this->getID());
 
-    ghc::filesystem::remove_all(extractPath, ec);
+    std::filesystem::remove_all(extractPath, ec);
     if (ec) {
         return Err("Unable to delete temp dir: {}", ec.message());
     }
@@ -155,7 +155,7 @@ Result<> Pack::extract() {
     return Ok();
 }
 
-std::optional<ghc::filesystem::path> Pack::findResourcesPath(ghc::filesystem::path targetPath) {
+std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::path targetPath) {
     // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
 
     if (m_path.extension().string() == ".apk") {
@@ -163,13 +163,13 @@ std::optional<ghc::filesystem::path> Pack::findResourcesPath(ghc::filesystem::pa
         return m_unzippedPath / "assets";
     }
 
-    if (ghc::filesystem::exists(targetPath / "pack.json") || ghc::filesystem::exists(targetPath / "pack.png")) {
+    if (std::filesystem::exists(targetPath / "pack.json") || std::filesystem::exists(targetPath / "pack.png")) {
         // this pack is made for texture loader, so it should be correct already
         return targetPath;
     }
 
     const auto existsDir = [](auto path) {
-        return ghc::filesystem::exists(path) && ghc::filesystem::is_directory(path);
+        return std::filesystem::exists(path) && std::filesystem::is_directory(path);
     };
 
     if (existsDir(targetPath / "Resources")) {
@@ -184,7 +184,7 @@ std::optional<ghc::filesystem::path> Pack::findResourcesPath(ghc::filesystem::pa
 
     // Look for any plist files, or png files ending in -uhd -hd or starting in GJ_
 
-    for (auto const& file : ghc::filesystem::directory_iterator(targetPath, ghc::filesystem::directory_options::skip_permission_denied)) {
+    for (auto const& file : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
         if (!file.is_regular_file()) continue;
 
         auto const path = file.path();
@@ -203,7 +203,7 @@ std::optional<ghc::filesystem::path> Pack::findResourcesPath(ghc::filesystem::pa
     }
 
     // ok, look recursively through the folders then
-    for (auto const& dir : ghc::filesystem::directory_iterator(targetPath, ghc::filesystem::directory_options::skip_permission_denied)) {
+    for (auto const& dir : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
         if (!dir.is_directory()) continue;
 
         auto const path = dir.path();
@@ -223,8 +223,8 @@ Pack::~Pack() {
     (void)this->unapply();
 }
 
-Result<std::shared_ptr<Pack>> Pack::from(ghc::filesystem::path const& dir) {
-    if (!ghc::filesystem::exists(dir)) {
+Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
+    if (!std::filesystem::exists(dir)) {
         return Err("Path does not exist");
     }
     auto pack = std::make_shared<Pack>();
@@ -240,5 +240,5 @@ matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::to_json(std::shared_pt
 }
 
 std::shared_ptr<Pack> matjson::Serialize<std::shared_ptr<Pack>>::from_json(matjson::Value const& value) {
-    return Pack::from(value["path"].as<ghc::filesystem::path>()).unwrap();
+    return Pack::from(value["path"].as<std::filesystem::path>()).unwrap();
 }

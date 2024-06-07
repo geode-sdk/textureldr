@@ -41,7 +41,7 @@ void PackManager::savePacks() {
     Mod::get()->getSaveContainer()["applied"] = m_applied;
 }
 
-ghc::filesystem::path PackManager::getPackDir() {
+std::filesystem::path PackManager::getPackDir() {
     return Mod::get()->getConfigDir() / "packs";
 }
 
@@ -54,7 +54,7 @@ size_t PackManager::loadPacks() {
     std::vector<std::shared_ptr<Pack>> found;
 
     // Load new packs
-    for (auto& dir : ghc::filesystem::directory_iterator(packDir)) {
+    for (auto& dir : std::filesystem::directory_iterator(packDir)) {
         auto packRes = Pack::from(dir);
         if (!packRes) {
             log::warn("Unable to load pack {}: {}", dir, packRes.unwrapErr());
@@ -71,7 +71,7 @@ size_t PackManager::loadPacks() {
     // manually do this so we can skip packs that fail
     for (auto const& obj : Mod::get()->getSavedValue<matjson::Array>("applied")) {
         if (obj.is_object() && obj.contains("path") && obj["path"].is_string()) {
-            auto res = Pack::from(obj["path"].as<ghc::filesystem::path>());
+            auto res = Pack::from(obj["path"].as<std::filesystem::path>());
             if (res) {
                 savedApplied.push_back(res.unwrap());
             }

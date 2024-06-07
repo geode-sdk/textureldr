@@ -2,7 +2,6 @@
 
 #include <string>
 #include <optional>
-#include <ghc/fs_fwd.hpp>
 #include <memory>
 #include <Geode/utils/Result.hpp>
 #include <Geode/utils/VersionInfo.hpp>
@@ -23,23 +22,23 @@ struct PackInfo {
 
 class Pack {
 protected:
-    ghc::filesystem::path m_path;
-    ghc::filesystem::path m_unzippedPath;
-    ghc::filesystem::path m_resourcesPath;
+    std::filesystem::path m_path;
+    std::filesystem::path m_unzippedPath;
+    std::filesystem::path m_resourcesPath;
     std::optional<PackInfo> m_info;
 
     Result<> parsePackJson();
 
     Result<> setup();
     Result<> extract();
-    std::optional<ghc::filesystem::path> findResourcesPath(ghc::filesystem::path targetPath);
+    std::optional<std::filesystem::path> findResourcesPath(std::filesystem::path targetPath);
 
 public:
     // Returns where the pack comes from. typically the folder, but will also point to the .zip files
     // for zipped packs
-    [[nodiscard]] ghc::filesystem::path getOriginPath() const;
+    [[nodiscard]] std::filesystem::path getOriginPath() const;
     // Returns the path where the resources are, whether the pack is a folder or it was unzipped by the mod
-    [[nodiscard]] ghc::filesystem::path getResourcesPath() const;
+    [[nodiscard]] std::filesystem::path getResourcesPath() const;
     [[nodiscard]] std::string getDisplayName() const;
     [[nodiscard]] std::string getID() const;
 
@@ -48,7 +47,7 @@ public:
 
     ~Pack();
 
-    static Result<std::shared_ptr<Pack>> from(ghc::filesystem::path const& dir);
+    static Result<std::shared_ptr<Pack>> from(std::filesystem::path const& dir);
 };
 
 template <>

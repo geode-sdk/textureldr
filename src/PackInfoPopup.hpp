@@ -11,7 +11,7 @@ protected:
 
     bool setup(std::shared_ptr<Pack> pack) override;
 
-    ghc::filesystem::path getPathInPack(const char* filename) const;
+    std::filesystem::path getPathInPack(const char* filename) const;
 
 public:
     static PackInfoPopup* create(const std::shared_ptr<Pack>& pack);

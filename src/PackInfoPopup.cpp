@@ -5,7 +5,7 @@
 
 class WackyBypassFont : public CCLabelBMFont {
 protected:
-    void setFntFile(ghc::filesystem::path fnt) {
+    void setFntFile(std::filesystem::path fnt) {
         auto conf = FNTConfigLoadFile(fnt.string().c_str());
         m_sFntFile = fnt.string();
         if (!conf) {
@@ -27,7 +27,7 @@ protected:
 public:
     static CCLabelBMFont* create(
         const char* text,
-        ghc::filesystem::path const& fnt
+        std::filesystem::path const& fnt
     ) {
         auto label = CCLabelBMFont::create();
         static_cast<WackyBypassFont*>(label)->setFntFile(fnt); // NOLINT(*-pro-type-static-cast-downcast)
@@ -36,7 +36,7 @@ public:
     }
 };
 
-ghc::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
+std::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
     std::string suffix;
     switch (CCDirector::get()->getLoadedTextureQuality()) {
         case kTextureQualityHigh: {
@@ -50,12 +50,12 @@ ghc::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
         default: break;
     }
 
-    auto fname = ghc::filesystem::path(filename);
+    auto fname = std::filesystem::path(filename);
     fname.replace_filename(
         fname.stem().string() + suffix + fname.extension().string()
     );
 
-    if (ghc::filesystem::exists(m_pack->getResourcesPath() / fname)) {
+    if (std::filesystem::exists(m_pack->getResourcesPath() / fname)) {
         return m_pack->getResourcesPath() / fname;
     } else {
         return dirs::getGameDir() / "Resources" / fname;

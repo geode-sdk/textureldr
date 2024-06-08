@@ -36,11 +36,13 @@ bool PackNode::init(
     auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
 
     if (!logo) {
-        logo = CCSprite::createWithSpriteFrameName("geode.loader/no-logo.png");
+        logo = CCSprite::create("noLogo.png"_spr);
     }
-    logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
-    limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
-    this->addChild(logo);
+    if (logo) {
+        logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
+        limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
+        this->addChild(logo);
+    }
 
     auto nameLabel = CCLabelBMFont::create(
         m_pack->getDisplayName().c_str(), "bigFont.fnt"

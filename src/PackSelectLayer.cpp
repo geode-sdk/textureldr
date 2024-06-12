@@ -5,7 +5,6 @@
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/binding/MenuLayer.hpp>
 #include <Geode/binding/ButtonSprite.hpp>
-#include <Geode/modify/CCScrollLayerExt.hpp>
 #include "PackManager.hpp"
 #include "PackNode.hpp"
 

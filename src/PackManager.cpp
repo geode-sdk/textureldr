@@ -113,7 +113,8 @@ void PackManager::updateAppliedPacks() {
 
 void PackManager::applyPacks(CreateLayerFunc func) {
     this->updateAppliedPacks();
-    FMODAudioEngine::sharedEngine()->stopAllMusic();
+    // TODO: find this function
+    // FMODAudioEngine::sharedEngine()->stopAllMusic();
     reloadTextures(std::move(func));
 }
 

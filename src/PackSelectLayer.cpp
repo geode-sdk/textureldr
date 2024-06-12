@@ -14,6 +14,8 @@ static CCSize LAYER_SIZE = { 230.f, 190.f };
 bool PackSelectLayer::init() {
     if (!CCLayer::init())
         return false;
+
+    GameManager::get()->fadeInMenuMusic();
     
     this->setID("PackSelectLayer");
 

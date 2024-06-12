@@ -1,4 +1,5 @@
 #include <Geode/modify/CCSprite.hpp>
+#include <Geode/modify/CCSpriteFrameCache.hpp>
 
 using namespace geode::prelude;
 
@@ -23,5 +24,22 @@ class $modify(CCSprite) {
             sprite = CCSprite::create("bigFont.png");
         }
         return sprite;
+    }
+
+    bool initWithSpriteFrame(CCSpriteFrame* frame) {
+        if (frame == nullptr) {
+            return CCSprite::initWithFile("fallback.png"_spr);
+        }
+        return CCSprite::initWithSpriteFrame(frame);
+    }
+};
+
+class $modify(CCSpriteFrameCache) {
+    cocos2d::CCSpriteFrame* spriteFrameByName(char const* name) {
+        auto* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(name);
+        if (frame == nullptr) {
+            frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
+        }
+        return frame;
     }
 };

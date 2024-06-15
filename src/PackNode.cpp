@@ -35,8 +35,10 @@ bool PackNode::init(
 
     auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
 
-    if (!logo) {
+    if (!logo || logo->getUserObject("fallback"_spr)) {
         logo = CCSprite::create("noLogo.png"_spr);
+        if (logo)
+            logo->setOpacity(100);
     }
     if (logo) {
         logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });

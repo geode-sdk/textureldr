@@ -3,15 +3,21 @@
 
 using namespace geode::prelude;
 
+void assignFallbackObj(CCNode* node) {
+    if (!node) return;
+    node->setUserObject("fallback"_spr, CCBool::create(true));
+}
+
 class $modify(CCSprite) {
     static CCSprite* create(const char* name) {
         auto* sprite = CCSprite::create(name);
         if (sprite == nullptr) {
             sprite = CCSprite::create("fallback.png"_spr);
-        }
-        // in dire cases, since no one is stupid enough to delete this texture
-        if (sprite == nullptr) {
-            sprite = CCSprite::create("bigFont.png");
+            // in dire cases, since no one is stupid enough to delete this texture
+            if (sprite == nullptr) {
+                sprite = CCSprite::create("bigFont.png");
+            }
+            assignFallbackObj(sprite);
         }
         return sprite;
     }
@@ -19,9 +25,10 @@ class $modify(CCSprite) {
         auto* sprite = CCSprite::createWithSpriteFrameName(name);
         if (sprite == nullptr) {
             sprite = CCSprite::create("fallback.png"_spr);
-        }
-        if (sprite == nullptr) {
-            sprite = CCSprite::create("bigFont.png");
+            if (sprite == nullptr) {
+                sprite = CCSprite::create("bigFont.png");
+            }
+            assignFallbackObj(sprite);
         }
         return sprite;
     }

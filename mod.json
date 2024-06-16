@@ -16,5 +16,12 @@
 			"resources/*.png"
 		]
 	},
-	"repository": "https://github.com/geode-sdk/textureldr"
+	"repository": "https://github.com/geode-sdk/textureldr",
+	"settings":{
+		"transparent":{
+			"name":"Transparent Background",
+			"description":"Remove the blue blender of the Pack Select Menu's background.",
+			"type":"bool",
+			"default":false
+		}
 }

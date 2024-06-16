@@ -24,4 +24,5 @@
 			"type":"bool",
 			"default":false
 		}
+	}
 }

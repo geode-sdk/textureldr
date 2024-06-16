@@ -22,6 +22,7 @@ bool PackSelectLayer::init() {
 
     auto background = createLayerBG();
     background->setID("background");
+    background->setColor({255, 255, 255})
     this->addChild(background);
 
     auto winSize = CCDirector::get()->getWinSize();

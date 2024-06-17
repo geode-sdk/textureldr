@@ -96,6 +96,7 @@ size_t PackManager::loadPacks() {
     m_available = found;
 
     this->updateAppliedPacks();
+
     log::info("Loaded {} packs", loaded);
 
     return loaded;

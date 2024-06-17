@@ -224,6 +224,14 @@ Pack::~Pack() {
 }
 
 Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
+    #ifdef GEODE_IS_WINDOWS
+    try {
+        auto test = dir.filename().string();
+    } catch(const std::exception& e) {
+        return Err("Invalid path");
+    }
+    #endif
+
     if (!std::filesystem::exists(dir)) {
         return Err("Path does not exist");
     }

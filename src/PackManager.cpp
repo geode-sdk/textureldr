@@ -25,13 +25,16 @@ std::vector<std::shared_ptr<Pack>> PackManager::getAppliedPacks() const {
 
 void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index) {
     auto& destination = to == PackListType::Applied ? m_applied : m_available;
-    auto& from = to != PackListType::Applied ? m_applied : m_available;
-
-    ranges::remove(from, pack);
-    if (index < destination.size()) {
-        destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+    if (ranges::contains(destination, pack)) {
+        ranges::move(destination, pack, index);
     } else {
-        destination.push_back(pack);
+        auto& from = to != PackListType::Applied ? m_applied : m_available;
+        ranges::remove(from, pack);
+        if (index < destination.size()) {
+            destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+        } else {
+            destination.push_back(pack);
+        }
     }
 }
 

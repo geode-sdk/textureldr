@@ -25,16 +25,13 @@ std::vector<std::shared_ptr<Pack>> PackManager::getAppliedPacks() const {
 
 void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index) {
     auto& destination = to == PackListType::Applied ? m_applied : m_available;
-    if (ranges::contains(destination, pack)) {
-        ranges::move(destination, pack, index);
+    auto& from = to != PackListType::Applied ? m_applied : m_available;
+
+    ranges::remove(from, pack);
+    if (index < destination.size()) {
+        destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
     } else {
-        auto& from = to != PackListType::Applied ? m_applied : m_available;
-        ranges::remove(from, pack);
-        if (index < destination.size()) {
-            destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
-        } else {
-            destination.push_back(pack);
-        }
+        destination.push_back(pack);
     }
 }
 
@@ -96,7 +93,6 @@ size_t PackManager::loadPacks() {
     m_available = found;
 
     this->updateAppliedPacks();
-
     log::info("Loaded {} packs", loaded);
 
     return loaded;
@@ -106,13 +102,20 @@ void PackManager::updateAppliedPacks() {
     for (auto& pack : m_available) {
         (void)pack->unapply();
     }
-    for (auto& pack : ranges::reverse(m_applied)) {
+    auto task = m_applied;
+    matjson::Object official_pack;
+    std::string val = CCFileUtils::sharedFileUtils()->getWritablePath2();
+    official_pack["pack"] = val;
+    auto official = Pack::from(official_pack["pack"].as<std::filesystem::path>());
+    task.push_back(official.unwrap());
+
+    for (auto& pack : ranges::reverse(task)) {
         (void)pack->apply();
     }
 }
 
 void PackManager::applyPacks(CreateLayerFunc func) {
-    this->updateAppliedPacks();
+    updateAppliedPacks();
     // TODO: find this function
     // FMODAudioEngine::sharedEngine()->stopAllMusic();
     reloadTextures(std::move(func));

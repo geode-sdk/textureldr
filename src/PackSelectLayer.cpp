@@ -22,8 +22,9 @@ bool PackSelectLayer::init() {
 
     auto background = createLayerBG();
     background->setID("background");
-    if (Mod::get()->getSettingValue<bool>("transparent")){
-        background->setColor({255, 255, 255});}
+    if (Mod::get()->getSettingValue<bool>("transparent")) {
+        background->setColor({255, 255, 255});
+    }
     this->addChild(background);
 
     auto winSize = CCDirector::get()->getWinSize();

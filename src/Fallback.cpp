@@ -2,33 +2,39 @@
 #include <Geode/modify/CCSpriteFrameCache.hpp>
 
 using namespace geode::prelude;
-
 void assignFallbackObj(CCNode* node) {
     if (!node) return;
     node->setUserObject("fallback"_spr, CCBool::create(true));
 }
 
-class $modify(CCSprite) {
-    static CCSprite* create(const char* name) {
-        auto* sprite = CCSprite::create(name);
-        if (sprite == nullptr) {
-            sprite = CCSprite::create("fallback.png"_spr);
-            // in dire cases, since no one is stupid enough to delete this texture
+CCSprite* fallback(auto name) {
+    const char * modpath = ""_spr;
+    const char * layout = fmt::format("{}{}",name,modpath).c_str();
+    log::debug("texture replaced: {}", layout);
+    auto* sprite = CCSprite::create(layout);
+    if (sprite == nullptr) {
+          sprite = CCSprite::create("fallback.png"_spr);
             if (sprite == nullptr) {
                 sprite = CCSprite::create("bigFont.png");
             }
             assignFallbackObj(sprite);
+    }
+    return sprite;
+};
+
+
+class $modify(CCSprite) {
+    static CCSprite* create(const char* name) {
+        auto* sprite = CCSprite::create(name);
+        if (sprite == nullptr) {
+            sprite = fallback(name);
         }
         return sprite;
     }
     static CCSprite* createWithSpriteFrameName(const char* name) {
         auto* sprite = CCSprite::createWithSpriteFrameName(name);
         if (sprite == nullptr) {
-            sprite = CCSprite::create("fallback.png"_spr);
-            if (sprite == nullptr) {
-                sprite = CCSprite::create("bigFont.png");
-            }
-            assignFallbackObj(sprite);
+            sprite = fallback(name);
         }
         return sprite;
     }
@@ -63,7 +69,12 @@ class $modify(CCSpriteFrameCache) {
                     return frame;
                 }
             }
-            frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
+            const char * modpath = ""_spr;
+            const char * layout = fmt::format("{}{}",name,modpath).c_str();
+            log::debug("texture replaced: {}", layout);
+            if (frame == nullptr) {
+                frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
+            }
         }
         return frame;
     }

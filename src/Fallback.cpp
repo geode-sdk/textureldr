@@ -9,7 +9,7 @@ void assignFallbackObj(CCNode* node) {
 
 CCSprite* fallback(auto name) {
     const char * modpath = ""_spr;
-    const char * layout = fmt::format("{}{}",name,modpath).c_str();
+    const char * layout = fmt::format("{}{}",modpath,name).c_str();
     log::debug("texture replaced: {}", layout);
     auto* sprite = CCSprite::create(layout);
     if (sprite == nullptr) {
@@ -70,7 +70,7 @@ class $modify(CCSpriteFrameCache) {
                 }
             }
             const char * modpath = ""_spr;
-            const char * layout = fmt::format("{}{}",name,modpath).c_str();
+            const char * layout = fmt::format("{}{}",modpath,name).c_str();
             log::debug("texture replaced: {}", layout);
             if (frame == nullptr) {
                 frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});

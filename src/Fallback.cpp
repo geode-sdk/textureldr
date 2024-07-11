@@ -71,7 +71,7 @@ class $modify(CCSpriteFrameCache) {
             }
             const char * modpath = ""_spr;
             const char * layout = fmt::format("{}{}",modpath,name).c_str();
-            log::debug("texture replaced: {}", layout);
+            frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(layout);
             if (frame == nullptr) {
                 frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
             }

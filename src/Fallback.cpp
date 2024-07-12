@@ -8,7 +8,7 @@ void assignFallbackObj(CCNode* node) {
 }
 CCSpriteFrame* fallbackFrame(const char* name) {
     const char * modpath = ""_spr;
-    const char * layout = fmt::format("geode-{}",name).c_str();
+    const char * layout = fmt::format("Geode_{}",name).c_str();
     auto* sprite = CCSprite::create(layout); 
     CCSpriteFrame* frame = nullptr;
     if (sprite == nullptr){
@@ -29,7 +29,7 @@ CCSpriteFrame* fallbackFrame(const char* name) {
 }
 CCSprite* fallback(auto name) {
     const char * modpath = ""_spr;
-    const char * layout = fmt::format("geode-{}",name).c_str();
+    const char * layout = fmt::format("Geode_{}",name).c_str();
     auto* sprite = CCSprite::create(layout);
     if (sprite == nullptr) {
          const char * layout = fmt::format("{}{}",modpath,name).c_str();

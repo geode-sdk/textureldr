@@ -51,7 +51,7 @@ class $modify(CCSprite) {
     static CCSprite* create(const char* name) {
         auto* sprite = CCSprite::create(name);
         if (sprite == nullptr) {
-            sprite = fallback(name);
+            sprite = fallback(name); // well ok ok i made it funny
         }
         return sprite;
     }
@@ -91,7 +91,7 @@ class $modify(CCSpriteFrameCache) {
             for (auto const& prefix : prefixes) {
                 if (nameStr.find(prefix) != -1) {
                     return frame;
-                }
+                } 
             }
             frame = fallbackFrame(name);
         }

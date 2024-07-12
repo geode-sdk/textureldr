@@ -14,7 +14,7 @@
 	"resources": {
 		"sprites": [
 			"resources/GameTextures/**/*.png",
-			"resources/GJ_GameSheet03/*.png"
+			"resources/*.png"
 		]
 	},
 	"repository": "https://github.com/geode-sdk/textureldr"

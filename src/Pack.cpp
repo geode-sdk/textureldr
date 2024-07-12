@@ -193,7 +193,7 @@ std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::pa
 
         if (ext == ".plist") {
             return targetPath;
-        } else if (ext == ".png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd") )) {
+        } else if (ext == ".png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd") || name.starts_with("Geode_") )) {
             return targetPath;
         } else if (ext == ".ogg") {
             return targetPath;

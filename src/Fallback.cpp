@@ -6,18 +6,41 @@ void assignFallbackObj(CCNode* node) {
     if (!node) return;
     node->setUserObject("fallback"_spr, CCBool::create(true));
 }
-
+CCSpriteFrame* fallbackFrame(const char* name) {
+    const char * modpath = ""_spr;
+    const char * layout = fmt::format("geode-{}",name).c_str();
+    auto* sprite = CCSprite::create(layout); 
+    CCSpriteFrame* frame = nullptr;
+    if (sprite == nullptr){
+            const char * layout = fmt::format("{}{}",modpath,name).c_str();
+            auto* sprite = CCSprite::create(layout);
+            if (sprite) {
+                auto* img = CCTextureCache::get()->addImage(layout,true); // fixes it by Caching it
+                frame =  CCSpriteFrame::create(layout, {ccp(0, 0),sprite->getContentSize()});
+            }
+            if (frame == nullptr) {
+                frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
+            }
+    } else {
+        auto* img = CCTextureCache::get()->addImage(layout,true); // fixes it by Caching it
+         frame =  CCSpriteFrame::create(layout, {ccp(0, 0),sprite->getContentSize()});
+    }
+    return frame;
+}
 CCSprite* fallback(auto name) {
     const char * modpath = ""_spr;
-    const char * layout = fmt::format("{}{}",modpath,name).c_str();
-    log::debug("texture replaced: {}", layout);
+    const char * layout = fmt::format("geode-{}",name).c_str();
     auto* sprite = CCSprite::create(layout);
     if (sprite == nullptr) {
+         const char * layout = fmt::format("{}{}",modpath,name).c_str();
+        auto* sprite = CCSprite::create(layout);
+        if (sprite == nullptr) {
           sprite = CCSprite::create("fallback.png"_spr);
             if (sprite == nullptr) {
                 sprite = CCSprite::create("bigFont.png");
             }
             assignFallbackObj(sprite);
+        }
     }
     return sprite;
 };
@@ -69,13 +92,7 @@ class $modify(CCSpriteFrameCache) {
                     return frame;
                 }
             }
-            const char * modpath = ""_spr;
-            const char * layout = fmt::format("{}{}",modpath,name).c_str();
-            auto* sprite = CCSprite::create(layout);
-            frame =  CCSpriteFrame::create(layout, {ccp(0, 0),sprite->getContentSize()});
-            if (frame == nullptr) {
-                frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
-            }
+            frame = fallbackFrame(name);
         }
         return frame;
     }

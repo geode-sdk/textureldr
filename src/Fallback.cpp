@@ -30,6 +30,7 @@ CCSpriteFrame* fallbackFrame(const char* name) {
 CCSprite* fallback(auto name) {
     const char * modpath = ""_spr;
     const char * layout = fmt::format("Geode_{}",name).c_str();
+    auto* img = CCTextureCache::get()->addImage(layout,true); // fixes it by Caching it
     auto* sprite = CCSprite::create(layout);
     if (sprite == nullptr) {
         const char * layout = fmt::format("{}{}",modpath,name).c_str();

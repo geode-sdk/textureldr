@@ -13,7 +13,7 @@
 	"early-load": true,
 	"resources": {
 		"sprites": [
-			"resources/*.png",
+			"resources/GameTextures/**/*.png",
 			"resources/GJ_GameSheet03/*.png"
 		]
 	},

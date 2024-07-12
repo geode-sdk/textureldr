@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>frames</key>
+	<dict>
+		<key>dungeonShine_001.png</key>
+		<dict>
+			<key>aliases</key>
+			<array/>
+			<key>spriteOffset</key>
+			<string>{-2,1}</string>
+			<key>spriteSize</key>
+			<string>{438,486}</string>
+			<key>spriteSourceSize</key>
+			<string>{444,494}</string>
+			<key>textureRect</key>
+			<string>{{1212,1},{438,486}}</string>
+			<key>textureRotated</key>
+			<false/>
+		</dict>
+		<key>dungeon_gate_001.png</key>
+		<dict>
+			<key>aliases</key>
+			<array/>
+			<key>spriteOffset</key>
+			<string>{-30,32}</string>
+			<key>spriteSize</key>
+			<string>{1208,1064}</string>
+			<key>spriteSourceSize</key>
+			<string>{1274,1152}</string>
+			<key>textureRect</key>
+			<string>{{1,1},{1208,1064}}</string>
+			<key>textureRotated</key>
+			<false/>
+		</dict>
+	</dict>
+	<key>metadata</key>
+	<dict>
+		<key>format</key>
+		<integer>3</integer>
+		<key>pixelFormat</key>
+		<string>RGBA8888</string>
+		<key>premultiplyAlpha</key>
+		<false/>
+		<key>realTextureFileName</key>
+		<string>DungeonSheet-uhd.png</string>
+		<key>size</key>
+		<string>{1651,1066}</string>
+		<key>smartupdate</key>
+		<string>$TexturePacker:SmartUpdate:8270366d52a083de5268ba800ebee4b6:63b4d4d9ef74b82d0352b7456c39cc52:6d4e4a00e843240c5782a23349fc641d$</string>
+		<key>textureFileName</key>
+		<string>DungeonSheet-uhd.png</string>
+	</dict>
+</dict>
+</plist>

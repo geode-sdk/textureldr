@@ -32,7 +32,7 @@ CCSprite* fallback(auto name) {
     const char * layout = fmt::format("Geode_{}",name).c_str();
     auto* sprite = CCSprite::create(layout);
     if (sprite == nullptr) {
-         const char * layout = fmt::format("{}{}",modpath,name).c_str();
+        const char * layout = fmt::format("{}{}",modpath,name).c_str();
         auto* sprite = CCSprite::create(layout);
         if (sprite == nullptr) {
           sprite = CCSprite::create("fallback.png"_spr);

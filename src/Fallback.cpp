@@ -22,7 +22,6 @@ CCSpriteFrame* fallbackFrame(const char* name) {
                 frame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
             }
     } else {
-        auto* img = CCTextureCache::get()->addImage(layout,true); // fixes it by Caching it
          frame =  CCSpriteFrame::create(layout, {ccp(0, 0),sprite->getContentSize()});
     }
     return frame;
@@ -30,7 +29,6 @@ CCSpriteFrame* fallbackFrame(const char* name) {
 CCSprite* fallback(auto name) {
     const char * modpath = ""_spr;
     const char * layout = fmt::format("Geode_{}",name).c_str();
-    auto* img = CCTextureCache::get()->addImage(layout,true); // fixes it by Caching it
     auto* sprite = CCSprite::create(layout);
     if (sprite == nullptr) {
         const char * layout = fmt::format("{}{}",modpath,name).c_str();

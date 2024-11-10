@@ -3,7 +3,7 @@
 #include <string>
 #include <optional>
 #include <memory>
-#include <Geode/utils/Result.hpp>
+#include <Geode/Result.hpp>
 #include <Geode/utils/VersionInfo.hpp>
 #include <Geode/ui/EnterLayerEvent.hpp>
 #include <matjson/stl_serialize.hpp>
@@ -52,9 +52,6 @@ public:
 
 template <>
 struct matjson::Serialize<std::shared_ptr<Pack>> {
-    static matjson::Value to_json(std::shared_ptr<Pack> const& pack);
-    static std::shared_ptr<Pack> from_json(matjson::Value const& value);
-    static bool is_json(matjson::Value const& value) {
-        return value.is_object();
-    }
+    static matjson::Value toJson(std::shared_ptr<Pack> const& pack);
+    static Result<std::shared_ptr<Pack>> fromJson(matjson::Value const& value);
 };

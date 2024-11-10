@@ -1,10 +1,10 @@
 {
-	"geode": "3.8.1",
+	"geode": "4.0.0",
 	"version": "v1.6.2",
 	"gd": {
-		"win": "2.206",
-		"android": "2.206",
-		"mac": "2.206"
+		"win": "2.2073",
+		"android": "2.2073",
+		"mac": "2.2073"
 	},
 	"id": "geode.texture-loader",
 	"name": "Texture Loader",

@@ -147,7 +147,7 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
 PackInfoPopup* PackInfoPopup::create(const std::shared_ptr<Pack>& pack) {
     auto ret = new PackInfoPopup;
     ret->m_pack = pack;
-    if (ret->init(
+    if (ret->initAnchored(
         320.f, 200.f, pack,
         ret->getPathInPack("GJ_square01.png").string().c_str()
     )) {

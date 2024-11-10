@@ -8,14 +8,12 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     auto info = PackInfo();
 
     auto copyJson = json;
-    auto checker = JsonChecker(copyJson);
-    auto root = checker.root("[pack.json]").obj();
+    auto root = checkJson(copyJson, "[pack.json]");
 
     auto target = root.needs("textureldr").get<VersionInfo>();
 
-    if (checker.isError()) {
-        return Err(checker.getError());
-    }
+    GEODE_UNWRAP(root.ok());
+
     auto current = Mod::get()->getVersion();
     if (target > VersionInfo(current.getMajor(), current.getMinor(), 99999999)) {
         return Err("Pack targets newer version of TextureLdr");
@@ -26,7 +24,7 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     root.needs("version").into(info.m_version);
 
     // has single "author" key?
-    if (auto author = root.has("author").as<matjson::Type::String>()) {
+    if (auto& author = root.has("author").assertIsString()) {
         info.m_authors = { author.get<std::string>() };
     }
     // otherwise use "authors" key
@@ -34,9 +32,7 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
         root.needs("authors").into(info.m_authors);
     }
 
-    if (checker.isError()) {
-        return Err(checker.getError());
-    }
+    GEODE_UNWRAP(root.ok());
 
     return Ok(info);
 }
@@ -76,15 +72,8 @@ Result<> Pack::unapply() const {
 
 Result<> Pack::parsePackJson() {
     try {
-        auto data = file::readString(m_resourcesPath / "pack.json");
-        if (!data) {
-            return Err(data.error());
-        }
-        auto res = PackInfo::from(matjson::Value::from_str(data.value()));
-        if (!res) {
-            return Err(res.unwrapErr());
-        }
-        m_info = res.unwrap();
+        GEODE_UNWRAP_INTO(auto json, file::readJson(m_resourcesPath / "pack.json"));
+        GEODE_UNWRAP_INTO(m_info, PackInfo::from(json));
         return Ok();
     } catch(std::exception& e) {
         return Err("Unable to parse pack.json: {}", e.what());
@@ -241,12 +230,12 @@ Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
     return Ok(pack);
 }
 
-matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::to_json(std::shared_ptr<Pack> const& pack) {
-    return matjson::Object({
+matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::toJson(std::shared_ptr<Pack> const& pack) {
+    return matjson::makeObject({
         { "path", pack->getOriginPath() }
     });
 }
 
-std::shared_ptr<Pack> matjson::Serialize<std::shared_ptr<Pack>>::from_json(matjson::Value const& value) {
-    return Pack::from(value["path"].as<std::filesystem::path>()).unwrap();
+Result<std::shared_ptr<Pack>> matjson::Serialize<std::shared_ptr<Pack>>::fromJson(matjson::Value const& value) {
+    return Ok(Pack::from(value["path"].as<std::filesystem::path>().unwrap()).unwrap());
 }

@@ -39,7 +39,7 @@ void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType 
 }
 
 void PackManager::savePacks() {
-    Mod::get()->getSaveContainer()["applied"] = m_applied;
+    Mod::get()->setSavedValue("applied", m_applied);
 }
 
 std::filesystem::path PackManager::getPackDir() {
@@ -75,11 +75,13 @@ size_t PackManager::loadPacks() {
     
     std::vector<std::shared_ptr<Pack>> savedApplied;
     // manually do this so we can skip packs that fail
-    for (auto const& obj : Mod::get()->getSavedValue<matjson::Array>("applied")) {
-        if (obj.is_object() && obj.contains("path") && obj["path"].is_string()) {
-            auto res = Pack::from(obj["path"].as<std::filesystem::path>());
-            if (res) {
-                savedApplied.push_back(res.unwrap());
+    for (auto const& obj : Mod::get()->getSavedValue<std::vector<matjson::Value>>("applied")) {
+        if (obj.isObject() && obj.contains("path") && obj["path"].isString()) {
+            if(auto pathRes = obj["path"].as<std::filesystem::path>()) {
+                auto res = Pack::from(pathRes.unwrap());
+                if (res) {
+                    savedApplied.push_back(res.unwrap());
+                }
             }
         }
     }

@@ -215,7 +215,7 @@ Pack::~Pack() {
 Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
     #ifdef GEODE_IS_WINDOWS
     try {
-        auto test = dir.filename().string();
+        (void) dir.filename().string();
     } catch(const std::exception& e) {
         return Err("Invalid path");
     }
@@ -237,5 +237,7 @@ matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::toJson(std::shared_ptr
 }
 
 Result<std::shared_ptr<Pack>> matjson::Serialize<std::shared_ptr<Pack>>::fromJson(matjson::Value const& value) {
-    return Ok(Pack::from(value["path"].as<std::filesystem::path>().unwrap()).unwrap());
+    GEODE_UNWRAP_INTO(auto path, value["path"].as<std::filesystem::path>());
+    GEODE_UNWRAP_INTO(auto pack, Pack::from(path));
+    return Ok(pack);
 }

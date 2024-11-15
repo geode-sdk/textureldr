@@ -24,8 +24,10 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     root.needs("version").into(info.m_version);
 
     // has single "author" key?
-    if (auto& author = root.has("author").assertIsString()) {
-        info.m_authors = { author.get<std::string>() };
+    if (auto author = root.has("author")) {
+        std::string temp;
+        author.into(temp);
+        info.m_authors = { temp };
     }
     // otherwise use "authors" key
     else {

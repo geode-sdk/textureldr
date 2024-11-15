@@ -2,9 +2,9 @@
 	"geode": "4.0.0-alpha.1",
 	"version": "v1.6.3",
 	"gd": {
-		"win": "2.2073",
-		"android": "2.2073",
-		"mac": "2.2073"
+		"win": "2.2074",
+		"android": "2.2074",
+		"mac": "2.2074"
 	},
 	"id": "geode.texture-loader",
 	"name": "Texture Loader",

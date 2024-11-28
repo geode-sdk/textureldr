@@ -10,15 +10,63 @@ static void assignFallbackObj(CCNode* node) {
     node->setUserObject("fallback"_spr, CCBool::create(true));
 }
 
+static CCTexture2D* generateFallback() {
+    auto scaleFactor = CCDirector::get()->getContentScaleFactor();
+    int width = 32 * scaleFactor;
+    auto halfWidth = width / 2;
+    uint8_t* data = new uint8_t[width * width * 4];
+    for (int y = 0; y < width / 2; y++) {
+        for (int x = 0; x < width / 2; x++) {
+            auto i = (y * width + x) * 4;
+            data[i] = 0xFF;
+            data[i + 1] = 0x00;
+            data[i + 2] = 0xDC;
+            data[i + 3] = 0xFF;
+        }
+        for (int x = width / 2; x < width; x++) {
+            auto i = (y * width + x) * 4;
+            data[i] = 0x00;
+            data[i + 1] = 0x00;
+            data[i + 2] = 0x00;
+            data[i + 3] = 0xFF;
+        }
+    }
+    for (int y = width / 2; y < width; y++) {
+        for (int x = 0; x < width / 2; x++) {
+            auto i = (y * width + x) * 4;
+            data[i] = 0x00;
+            data[i + 1] = 0x00;
+            data[i + 2] = 0x00;
+            data[i + 3] = 0xFF;
+        }
+        for (int x = width / 2; x < width; x++) {
+            auto i = (y * width + x) * 4;
+            data[i] = 0xFF;
+            data[i + 1] = 0x00;
+            data[i + 2] = 0xDC;
+            data[i + 3] = 0xFF;
+        }
+    }
+
+    auto texture = new CCTexture2D();
+    texture->initWithData(data, kCCTexture2DPixelFormat_RGBA8888, width, width, ccp(width, width));
+    texture->autorelease();
+    return texture;
+    delete[] data;
+}
+
 class $modify(CCSprite) {
     static CCSprite* create(const char* name) {
         auto* sprite = CCSprite::create(name);
         if (sprite == nullptr) {
-            sprite = CCSprite::create("fallback.png"_spr);
-            // in dire cases, since no one is stupid enough to delete this texture
-            if (sprite == nullptr) {
-                sprite = CCSprite::create("bigFont.png");
+            auto textureCache = CCTextureCache::get();
+            auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey("fallback"_spr));
+            if (!fallbackTexture) {
+                fallbackTexture = generateFallback();
+                textureCache->m_pTextures->setObject(fallbackTexture, "fallback"_spr);
             }
+
+            sprite = CCSprite::createWithTexture(fallbackTexture);
             assignFallbackObj(sprite);
         }
         return sprite;
@@ -30,21 +78,17 @@ class $modify(CCSprite) {
         // we check for tag instead of the frame name because this is significantly better for performance
         bool needFallback = !spriteFrame || spriteFrame->getTag() == FALLBACK_TAG;
 
-        if (!needFallback) {
-            return CCSprite::createWithSpriteFrame(spriteFrame);
+        CCSprite* sprite = CCSprite::createWithSpriteFrame(spriteFrame);
+        if (needFallback) {
+            assignFallbackObj(sprite);
         }
-
-        CCSprite* sprite = CCSprite::create("fallback.png"_spr);
-        if (sprite == nullptr) {
-            sprite = CCSprite::create("bigFont.png");
-        }
-        assignFallbackObj(sprite);
         return sprite;
     }
 
     bool initWithSpriteFrame(CCSpriteFrame* frame) {
         if (frame == nullptr) {
-            bool result = CCSprite::initWithFile("fallback.png"_spr);
+            bool result = CCSprite::initWithSpriteFrame(CCSpriteFrame::createWithTexture(
+                generateFallback(), {ccp(0, 0), ccp(32, 32)}));
             if (result) {
                 assignFallbackObj(this);
             }
@@ -82,18 +126,12 @@ class $modify(CCSpriteFrameCache) {
             }
         }
 
-        // check if the fallback was already added
-        auto fallbackFrame = CCSpriteFrameCache::spriteFrameByName("fallback.png"_spr);
-        if (fallbackFrame) {
-            return fallbackFrame;
-        }
-
         // create the fallback frame and add to cache
-        fallbackFrame = CCSpriteFrame::create("fallback.png"_spr, {ccp(0, 0), ccp(128, 128)});
+        auto fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
 
         if (fallbackFrame) {
             fallbackFrame->setTag(FALLBACK_TAG);
-            this->addSpriteFrame(fallbackFrame, "fallback.png"_spr);
+            this->addSpriteFrame(fallbackFrame, name);
         }
 
         return fallbackFrame;

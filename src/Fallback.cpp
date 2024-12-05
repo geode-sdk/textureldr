@@ -11,9 +11,7 @@ static void assignFallbackObj(CCNode* node) {
 }
 
 static CCTexture2D* generateFallback() {
-    auto scaleFactor = CCDirector::get()->getContentScaleFactor();
-    int width = 32 * scaleFactor;
-    auto halfWidth = width / 2;
+    int width = 32 * CCDirector::get()->getContentScaleFactor();
     uint8_t* data = new uint8_t[width * width * 4];
     for (int y = 0; y < width / 2; y++) {
         for (int x = 0; x < width / 2; x++) {
@@ -51,8 +49,8 @@ static CCTexture2D* generateFallback() {
     auto texture = new CCTexture2D();
     texture->initWithData(data, kCCTexture2DPixelFormat_RGBA8888, width, width, ccp(width, width));
     texture->autorelease();
-    return texture;
     delete[] data;
+    return texture;
 }
 
 class $modify(CCSprite) {
@@ -60,10 +58,10 @@ class $modify(CCSprite) {
         auto* sprite = CCSprite::create(name);
         if (sprite == nullptr) {
             auto textureCache = CCTextureCache::get();
-            auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey("fallback"_spr));
+            auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey("fallback.png"_spr));
             if (!fallbackTexture) {
                 fallbackTexture = generateFallback();
-                textureCache->m_pTextures->setObject(fallbackTexture, "fallback"_spr);
+                textureCache->m_pTextures->setObject(fallbackTexture, "fallback.png"_spr);
             }
 
             sprite = CCSprite::createWithTexture(fallbackTexture);
@@ -87,8 +85,7 @@ class $modify(CCSprite) {
 
     bool initWithSpriteFrame(CCSpriteFrame* frame) {
         if (frame == nullptr) {
-            bool result = CCSprite::initWithSpriteFrame(CCSpriteFrame::createWithTexture(
-                generateFallback(), {ccp(0, 0), ccp(32, 32)}));
+            bool result = CCSprite::initWithSpriteFrame(CCSpriteFrameCache::get()->spriteFrameByName("fallback.png"_spr));
             if (result) {
                 assignFallbackObj(this);
             }
@@ -128,11 +125,8 @@ class $modify(CCSpriteFrameCache) {
 
         // create the fallback frame and add to cache
         auto fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
-
-        if (fallbackFrame) {
-            fallbackFrame->setTag(FALLBACK_TAG);
-            this->addSpriteFrame(fallbackFrame, name);
-        }
+        fallbackFrame->setTag(FALLBACK_TAG);
+        this->addSpriteFrame(fallbackFrame, name);
 
         return fallbackFrame;
     }

@@ -41,6 +41,7 @@ public:
     [[nodiscard]] std::filesystem::path getResourcesPath() const;
     [[nodiscard]] std::string getDisplayName() const;
     [[nodiscard]] std::string getID() const;
+    [[nodiscard]] std::optional<PackInfo> getInfo() const;
 
     [[nodiscard]] Result<> apply();
     [[nodiscard]] Result<> unapply() const;

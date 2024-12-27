@@ -59,6 +59,10 @@ std::string Pack::getDisplayName() const {
         m_path.filename().string();
 }
 
+std::optional<PackInfo> Pack::getInfo() const {
+    return m_info;
+}
+
 Result<> Pack::apply() {
     CCFileUtils::get()->addTexturePack(CCTexturePack {
         .m_id = this->getID(),

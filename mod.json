@@ -1,6 +1,6 @@
 {
-	"geode": "4.0.1",
-	"version": "v1.6.7",
+	"geode": "4.1.1",
+	"version": "v1.7.0",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
@@ -18,5 +18,8 @@
 	},
 	"links": {
 		"source": "https://github.com/geode-sdk/textureldr"
+	},
+	"api": {
+		"include": ["include/*.hpp"]
 	}
 }

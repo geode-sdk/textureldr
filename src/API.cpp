@@ -34,7 +34,6 @@ ext::Pack convertPack(std::shared_ptr<Pack> const& pack) {
 
 $execute {
     new EventListener(+[](std::vector<ext::Pack>* res) {
-        log::debug("received event!");
         *res = utils::ranges::map<std::vector<ext::Pack>>(PackManager::get()->getAvailablePacks(), convertPack);
         return ListenerResult::Stop;
     }, ToFilter<ext::impl::EventGetAvailablePacks>("geode.texture-loader/v1/get-available-packs"));

@@ -31,9 +31,7 @@ namespace impl {
 
 inline std::vector<Pack> getAvailablePacks() {
     std::vector<Pack> result;
-    log::debug("sending event!");
     impl::EventGetAvailablePacks("geode.texture-loader/v1/get-available-packs", &result).post();
-    log::debug("ok sent event!");
     return result;
 }
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Geode/loader/Dispatch.hpp>
+#include <Geode/loader/Loader.hpp>
+#include <Geode/utils/VersionInfo.hpp>
 
 #include <filesystem>
 #include <vector>

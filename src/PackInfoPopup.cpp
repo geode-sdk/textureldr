@@ -65,15 +65,13 @@ std::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
 bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
     m_pack = pack;
 
-    auto winSize = CCDirector::sharedDirector()->getWinSize();
-
     auto title = WackyBypassFont::create(
         pack->getDisplayName().c_str(),
         this->getPathInPack("goldFont.fnt")
     );
     title->setPosition(
-        winSize.width / 2,
-        winSize.height / 2 + m_size.height / 2 - 30.f
+        m_size.width / 2,
+        m_size.height / 2 + m_size.height / 2 - 30.f
     );
     m_mainLayer->addChild(title);
 
@@ -84,7 +82,7 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
         this->getPathInPack("bigFont.fnt")
     );
     bigFontLabel->limitLabelWidth(m_size.width, .5f, .1f);
-    bigFontLabel->setPosition(winSize / 2 + CCPoint { 0.f, 10.f });
+    bigFontLabel->setPosition(m_size / 2 + CCPoint { 0.f, 10.f });
     m_mainLayer->addChild(bigFontLabel);
 
     // GJ_button_01.png
@@ -111,7 +109,7 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
     auto defaultBtn = CCMenuItemSpriteExtra::create(
         defaultBtnSpr, this, nullptr
     );
-    defaultBtn->setPosition(-60.f, -50.f);
+    defaultBtn->setPosition(m_size / 2 + CCPoint{-60.f, -50.f});
     m_buttonMenu->addChild(defaultBtn);
 
     // GJ_button_02.png
@@ -138,7 +136,7 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
     auto altBtn = CCMenuItemSpriteExtra::create(
         altBtnSpr, this, nullptr
     );
-    altBtn->setPosition(60.f, -50.f);
+    altBtn->setPosition(m_size / 2 + CCPoint{60.f, -50.f});
     m_buttonMenu->addChild(altBtn);
 
     return true;
@@ -147,7 +145,7 @@ bool PackInfoPopup::setup(std::shared_ptr<Pack> pack) {
 PackInfoPopup* PackInfoPopup::create(const std::shared_ptr<Pack>& pack) {
     auto ret = new PackInfoPopup;
     ret->m_pack = pack;
-    if (ret->init(
+    if (ret->initAnchored(
         320.f, 200.f, pack,
         ret->getPathInPack("GJ_square01.png").string().c_str()
     )) {

@@ -1,10 +1,10 @@
-name: Build Geode mod
+name: Build Geode Mod
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - "main"
+      - "**"
 
 jobs:
   build:
@@ -14,10 +14,9 @@ jobs:
         config:
         - name: Windows
           os: windows-latest
-          
-        - name: iOS
+
+        - name: macOS
           os: macos-latest
-          target: Ios
 
         - name: Android32
           os: ubuntu-latest
@@ -26,6 +25,10 @@ jobs:
         - name: Android64
           os: ubuntu-latest
           target: Android64
+
+        - name: iOS
+          os: macos-latest
+          target: iOS
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -42,7 +45,7 @@ jobs:
           sdk: 'nightly'
           cli: 'nightly'
           target: ${{ matrix.config.target }}
-      
+
   package:
     name: Package builds
     runs-on: ubuntu-latest

@@ -28,41 +28,40 @@ bool PackSelectPopup::init() {
     title->setScale(.8f);
     m_mainLayer->addChild(title);
 
-    auto menu = CCMenu::create();
-    menu->setID("menu");
-    menu->ignoreAnchorPointForPosition(false);
-    menu->setPosition({size.width/2, 0});
-    menu->setAnchorPoint({0.5, 0});
-    menu->setContentSize({size.width - 10, 50});
-    menu->setZOrder(10);
-    menu->setLayout(
-        SimpleRowLayout::create()
-            ->setMainAxisAlignment(MainAxisAlignment::Between)
-    );
+    int availCount = PackManager::get()->getAvailablePacks().size();
+    int appliedCount = PackManager::get()->getAppliedPacks().size();
+
+    auto infoLabel = CCLabelBMFont::create(fmt::format("Available: {}\nApplied: {}\nTotal: {}", availCount, appliedCount, availCount + appliedCount).c_str(), "chatFont.fnt");
+    infoLabel->setPosition({70, 25});
+    infoLabel->setID("info-text");
+    infoLabel->setScale(.45f);
+    infoLabel->setOpacity(200.f);
+    m_mainLayer->addChild(infoLabel);
 
     auto reloadSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
-    reloadSpr->setScale(.8f);
+    reloadSpr->setScale(.7f);
     auto reloadBtn = CCMenuItemSpriteExtra::create(reloadSpr, this, menu_selector(PackSelectPopup::onReloadPacks));
     reloadBtn->setID("reload-button");
-    menu->addChild(reloadBtn);
+    reloadBtn->setPosition({30, 25});
 
-
+    m_buttonMenu->addChild(reloadBtn);
+    auto applySpr = ButtonSprite::create("Apply", "goldFont.fnt", "GJ_button_01.png", .8f);
+    applySpr->setScale(0.9f);
     auto applyBtn = CCMenuItemSpriteExtra::create(
-        ButtonSprite::create("Apply", "goldFont.fnt", "GJ_button_01.png", .8f),
+        applySpr,
         this, menu_selector(PackSelectPopup::onApply)
     );
     applyBtn->setID("apply-button");
-    menu->addChild(applyBtn);
+    applyBtn->setPosition({size.width/2, 25});
+    m_buttonMenu->addChild(applyBtn);
 
     auto folderBtn = CCMenuItemSpriteExtra::create(
         CCSprite::createWithSpriteFrameName("gj_folderBtn_001.png"),
         this, menu_selector(PackSelectPopup::onOpenFolder)
     );
     folderBtn->setID("folder-button");
-    menu->addChild(folderBtn);
-
-    menu->updateLayout();
-    m_mainLayer->addChild(menu);
+    folderBtn->setPosition({size.width - 30, 25});
+    m_buttonMenu->addChild(folderBtn);
 
     // available packs list
 
@@ -288,7 +287,6 @@ void PackSelectPopup::reorderList(ScrollLayer* list, std::vector<std::shared_ptr
 
         child->stopAllActions();
         child->runAction(CCEaseInOut::create(CCMoveTo::create(0.3, {child->getPositionX(), y + PackNode::HEIGHT / 2}), 2.f));
-        //child->setPositionY(y + PackNode::HEIGHT / 2);
 
         ++visualIdx;
     }

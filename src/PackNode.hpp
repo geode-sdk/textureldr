@@ -6,16 +6,16 @@
 
 using namespace geode::prelude;
 
-class PackSelectLayer;
+class PackSelectPopup;
 
 class PackNode : public CCNode {
 protected:
-    PackSelectLayer* m_layer;
+    PackSelectPopup* m_layer;
     std::shared_ptr<Pack> m_pack;
-    CCNode* m_draggingBg;
+    CCScale9Sprite* m_draggingBg;
 
     bool init(
-        PackSelectLayer* layer,
+        PackSelectPopup* layer,
         const std::shared_ptr<Pack>& pack,
         float width
     );
@@ -24,7 +24,7 @@ protected:
 
 public:
     static PackNode* create(
-        PackSelectLayer* layer,
+        PackSelectPopup* layer,
         const std::shared_ptr<Pack>& pack,
         float width
     );

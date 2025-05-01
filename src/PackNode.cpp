@@ -1,12 +1,12 @@
 #include "PackNode.hpp"
 #include <Geode/binding/CCMenuItemToggler.hpp>
 #include "PackManager.hpp"
-#include "PackSelectLayer.hpp"
+#include "PackSelectPopup.hpp"
 #include "PackInfoPopup.hpp"
 #include "DragThingy.hpp"
 
 bool PackNode::init(
-    PackSelectLayer* layer,
+    PackSelectPopup* layer,
     const std::shared_ptr<Pack>& pack,
     float width
 ) {
@@ -32,6 +32,8 @@ bool PackNode::init(
     auto menu = CCMenu::create();
     menu->setPosition(menuPosX, HEIGHT / 2);
     menu->setID("pack-button-menu");
+    menu->setContentSize(this->getContentSize());
+    menu->setPosition({0, 0});
 
     auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
 
@@ -49,7 +51,9 @@ bool PackNode::init(
     auto nameLabel = CCLabelBMFont::create(
         m_pack->getDisplayName().c_str(), "bigFont.fnt"
     );
-    nameLabel->limitLabelWidth(labelWidth, .65f, .1f);
+    nameLabel->limitLabelWidth(125.f, 0.40f, 0.1f);
+    nameLabel->setPositionX(0);
+    nameLabel->setAnchorPoint({0, 0.5f});
 
     auto nameButton = CCMenuItemSpriteExtra::create(
         nameLabel, this, menu_selector(PackNode::onView)
@@ -58,7 +62,10 @@ bool PackNode::init(
         PADDING + SPACE_FOR_LOGO + nameLabel->getScaledContentSize().width / 2 - menuPosX,
         0
     );
+
     nameButton->setID("pack-name-button");
+    nameButton->setContentWidth(nameLabel->getScaledContentWidth());
+    nameButton->setEnabled(false);
     menu->addChild(nameButton);
 
     auto applyArrowSpr = CCSprite::create("dragIcon.png"_spr);
@@ -75,27 +82,51 @@ bool PackNode::init(
             m_layer->stopDrag();
         }
     );
+
+    if (!m_pack->getInfo().has_value()) {
+        nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight()/2});
+    }
+    else {
+        PackInfo packInfo = m_pack->getInfo().value();
+        CCLabelBMFont* extraInfoLabel = CCLabelBMFont::create(fmt::format("{} | {}", packInfo.m_version.toNonVString(), packInfo.m_id).c_str(), "bigFont.fnt");
+        extraInfoLabel->setColor({127, 127, 127});
+        extraInfoLabel->setScale(0.15f);
+        extraInfoLabel->setAnchorPoint({0, 0.5f});
+        extraInfoLabel->setOpacity(127);
+        extraInfoLabel->setPosition({40, 8});
+        extraInfoLabel->setZOrder(-1);
+        this->addChild(extraInfoLabel);
+
+        CCLabelBMFont* authorLabel = CCLabelBMFont::create(packInfo.m_authors.at(0).c_str(), "goldFont.fnt");
+        authorLabel->setAnchorPoint({0, 0.5f});
+        authorLabel->setPosition({40.2, 15});
+        authorLabel->setZOrder(-1);
+        authorLabel->setScale(0.25f);
+        this->addChild(authorLabel);
+
+        nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight()-10});
+    }
+
     applyArrowSpr->setAnchorPoint(ccp(0, 0));
     dragHandle->addChild(applyArrowSpr);
     dragHandle->setContentSize(applyArrowSpr->getScaledContentSize());
     dragHandle->setID("apply-pack-button");
     dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
     dragHandle->setTouchPriority(-130);
+
     this->addChild(dragHandle);
 
-    auto dragBg = CCScale9Sprite::create(
+    m_draggingBg = CCScale9Sprite::create(
         "square02b_001.png", { 0, 0, 80, 80 }
     );
-    dragBg->setColor({ 0, 0, 0 });
-    dragBg->setOpacity(90);
-    const float bgScaling = 0.5f;
-    dragBg->setContentSize(this->getContentSize() / bgScaling);
-    dragBg->setScale(bgScaling);
-    dragBg->setPosition({ width / 2.f, HEIGHT / 2.f });
-    dragBg->setZOrder(-10);
-    this->addChild(dragBg);
-    m_draggingBg = dragBg;
-    dragBg->setVisible(false);
+    m_draggingBg->setColor({ 0, 0, 0 });
+    m_draggingBg->setOpacity(90);
+    m_draggingBg->setContentSize(this->getContentSize());
+    m_draggingBg->setPosition({ width / 2.f, HEIGHT / 2.f });
+    m_draggingBg->setZOrder(-10);
+    m_draggingBg->setVisible(false);
+    
+    this->addChild(m_draggingBg);
 
     this->addChild(menu);
 
@@ -107,7 +138,7 @@ void PackNode::onView(CCObject*) {
 }
 
 PackNode* PackNode::create(
-    PackSelectLayer* layer,
+    PackSelectPopup* layer,
     const std::shared_ptr<Pack>& pack,
     float width
 ) {

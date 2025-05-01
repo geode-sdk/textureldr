@@ -31,5 +31,5 @@ public:
 
     std::shared_ptr<Pack> getPack() { return m_pack; }
 
-    static constexpr float HEIGHT = 35.f;
+    static constexpr float HEIGHT = 35.f * .88f;
 };

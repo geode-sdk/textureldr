@@ -90,6 +90,12 @@ bool PackSelectPopup::init() {
     m_mainLayer->addChild(availableListBG);
 
     m_availableList = ScrollLayer::create(LAYER_SIZE * scale);
+    m_availableList->m_contentLayer->setLayout(
+        SimpleColumnLayout::create()
+        ->setMainAxisDirection(AxisDirection::TopToBottom)
+            ->setMainAxisAlignment(MainAxisAlignment::Start)
+            ->setMainAxisScaling(AxisScaling::Grow)
+    );
     m_availableList->setPosition(
         size / 2 + CCPoint { -distanceFromCenter, heightOffset } - LAYER_SIZE * scale / 2
     );
@@ -118,6 +124,12 @@ bool PackSelectPopup::init() {
     m_mainLayer->addChild(appliedListBG);
 
     m_appliedList = ScrollLayer::create(LAYER_SIZE * scale);
+    m_appliedList->m_contentLayer->setLayout(
+        SimpleColumnLayout::create()
+            ->setMainAxisDirection(AxisDirection::TopToBottom)
+            ->setMainAxisAlignment(MainAxisAlignment::Start)
+            ->setMainAxisScaling(AxisScaling::Grow)
+    );
     m_appliedList->setPosition(
         size / 2 + CCPoint { distanceFromCenter, heightOffset } - LAYER_SIZE * scale / 2
     );
@@ -135,24 +147,14 @@ void PackSelectPopup::updateList(
     bool resetPos
 ) {
     list->m_contentLayer->removeAllChildren();
-    float totalHeight = .0f;
-    std::vector<PackNode*> rendered;
     for (auto& pack : packs) {
         auto node = PackNode::create(this, pack, LAYER_SIZE.width);
         node->setScale(.88f);
-        totalHeight += node->getScaledContentSize().height;
-        node->setPosition(0.f, -totalHeight);
         list->m_contentLayer->addChild(node);
-
-        rendered.push_back(node);
     }
-    if (totalHeight < LAYER_SIZE.height) {
-        totalHeight = LAYER_SIZE.height;
-    }
-    for (auto& node : rendered) {
-        node->setPositionY(node->getPositionY() + totalHeight);
-    }
-    list->m_contentLayer->setContentSize({ LAYER_SIZE.width, totalHeight });
+    
+    list->m_contentLayer->setContentHeight(list->getContentHeight());
+    list->m_contentLayer->updateLayout();
     if (resetPos) {
         list->moveToTop();
     }
@@ -218,9 +220,8 @@ void PackSelectPopup::startDragging(PackNode* node) {
 
 PackListType PackSelectPopup::whereDragList() {
     if (!m_draggingNode) return PackListType::Available;
-    // it has the anchor point on bot left for some reason
-    auto x = m_draggingNode->getPosition().x + m_draggingNode->getScaledContentSize().width / 2.f;
-    if (x > CCDirector::get()->getWinSize().width / 2.f) {
+    auto x = m_draggingNode->getPosition().x;
+    if (x > getContentWidth() / 2.f) {
         return PackListType::Applied;
     } else {
         return PackListType::Available;
@@ -243,7 +244,7 @@ void PackSelectPopup::reorderDragging() {
 
     const auto listTop = listTo.first->convertToWorldSpace(
         listTo.first->m_contentLayer->getPosition() + listTo.first->m_contentLayer->getContentSize()).y;
-    const auto nodeY = m_draggingNode->getPosition().y + m_draggingNode->getScaledContentSize().height / 2.f;
+    const auto nodeY = m_draggingNode->getPosition().y;
 
     auto targetIdx = static_cast<size_t>(std::max((listTop - nodeY) / PackNode::HEIGHT, 0.f));
 
@@ -273,7 +274,7 @@ void PackSelectPopup::reorderList(ScrollLayer* list, std::vector<std::shared_ptr
     int visualIdx = 0;
     for (const auto& pack : packs) {
         if (visualIdx == skipIdx) {
-            y -= PackNode::HEIGHT * .88f;
+            y -= PackNode::HEIGHT;
             ++visualIdx;
         }
 
@@ -283,9 +284,11 @@ void PackSelectPopup::reorderList(ScrollLayer* list, std::vector<std::shared_ptr
 
         auto* child = childForPack(pack);
 
-        y -= PackNode::HEIGHT * .88f;
+        y -= PackNode::HEIGHT;
 
-        child->setPositionY(y);
+        child->stopAllActions();
+        child->runAction(CCEaseInOut::create(CCMoveTo::create(0.3, {child->getPositionX(), y + PackNode::HEIGHT / 2}), 2.f));
+        //child->setPositionY(y + PackNode::HEIGHT / 2);
 
         ++visualIdx;
     }

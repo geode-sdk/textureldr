@@ -13,7 +13,7 @@ bool PackNode::init(
     if (!CCNode::init())
         return false;
 
-    constexpr float HEIGHT = PackNode::HEIGHT;
+    constexpr float HEIGHT = PackNode::HEIGHT / .88f;
     constexpr float SPACE_FOR_MENU = 50.f;
     constexpr float MOVE_OFFSET = 20.f;
     constexpr float SPACE_FOR_LOGO = HEIGHT;
@@ -117,8 +117,9 @@ bool PackNode::init(
     this->addChild(dragHandle);
 
     m_draggingBg = CCScale9Sprite::create(
-        "square02b_001.png", { 0, 0, 80, 80 }
+        "square02b_001.png"
     );
+    m_draggingBg->setCapInsets({10, 10, 50, 50});
     m_draggingBg->setColor({ 0, 0, 0 });
     m_draggingBg->setOpacity(90);
     m_draggingBg->setContentSize(this->getContentSize());

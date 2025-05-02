@@ -11,7 +11,7 @@
 #include "BoundedScrollLayer.hpp"
 
 // go back to options after apply
-class $modify(MyMenuLayer, MenuLayer) {
+class $modify(ReloadMenuLayer, MenuLayer) {
 
     struct Fields {
         bool m_openPackSelectPopup = false;
@@ -187,7 +187,7 @@ void PackSelectPopup::updateLists(bool resetPos) {
 void PackSelectPopup::onApply(CCObject*) {
     PackManager::get()->applyPacks(+[]() -> CCLayer* {
         CCScene* scene = MenuLayer::scene(true);
-        MyMenuLayer* menuLayer = static_cast<MyMenuLayer*>(scene->getChildByType<MenuLayer*>(0));
+        ReloadMenuLayer* menuLayer = static_cast<ReloadMenuLayer*>(scene->getChildByType<MenuLayer*>(0));
         menuLayer->m_fields->m_openPackSelectPopup = true;
         return menuLayer;
     });

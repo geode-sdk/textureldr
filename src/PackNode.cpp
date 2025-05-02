@@ -36,7 +36,6 @@ bool PackNode::init(
     menu->setPosition({0, 0});
 
     auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
-    logo->setID("pack-logo");
 
     if (!logo || logo->getUserObject("fallback"_spr)) {
         logo = CCSprite::create("noLogo.png"_spr);
@@ -48,6 +47,7 @@ bool PackNode::init(
         limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
         this->addChild(logo);
     }
+    logo->setID("pack-logo");
 
     auto nameLabel = CCLabelBMFont::create(
         m_pack->getDisplayName().c_str(), "bigFont.fnt"

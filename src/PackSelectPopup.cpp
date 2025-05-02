@@ -8,6 +8,26 @@
 #include <Geode/binding/ButtonSprite.hpp>
 #include "PackManager.hpp"
 #include "PackNode.hpp"
+#include "BoundedScrollLayer.hpp"
+
+// go back to options after apply
+class $modify(MyMenuLayer, MenuLayer) {
+
+    struct Fields {
+        bool m_openPackSelectPopup = false;
+    };
+
+    void openOptions(bool videoOptions) {
+        auto fields = m_fields.self();
+        if (fields->m_openPackSelectPopup) {
+            MenuLayer::openOptions(false);
+            PackSelectPopup::create()->show();
+            fields->m_openPackSelectPopup = false;
+            return;
+        }
+        MenuLayer::openOptions(videoOptions);
+    }
+};
 
 static CCSize LAYER_SIZE = { 230.f, 210.f };
 
@@ -88,7 +108,7 @@ bool PackSelectPopup::init() {
     availableListBG->setID("available-list-background");
     m_mainLayer->addChild(availableListBG);
 
-    m_availableList = ScrollLayer::create(LAYER_SIZE * scale);
+    m_availableList = BoundedScrollLayer::create(LAYER_SIZE * scale);
     m_availableList->m_contentLayer->setLayout(
         SimpleColumnLayout::create()
         ->setMainAxisDirection(AxisDirection::TopToBottom)
@@ -122,7 +142,7 @@ bool PackSelectPopup::init() {
     appliedListBG->setID("applied-list-background");
     m_mainLayer->addChild(appliedListBG);
 
-    m_appliedList = ScrollLayer::create(LAYER_SIZE * scale);
+    m_appliedList = BoundedScrollLayer::create(LAYER_SIZE * scale);
     m_appliedList->m_contentLayer->setLayout(
         SimpleColumnLayout::create()
             ->setMainAxisDirection(AxisDirection::TopToBottom)
@@ -163,24 +183,6 @@ void PackSelectPopup::updateLists(bool resetPos) {
     this->updateList(m_availableList, PackManager::get()->getAvailablePacks(), resetPos);
     this->updateList(m_appliedList, PackManager::get()->getAppliedPacks(), resetPos);
 }
-
-class $modify(MyMenuLayer, MenuLayer) {
-
-    struct Fields {
-        bool m_openPackSelectPopup = false;
-    };
-
-    void openOptions(bool videoOptions) {
-        auto fields = m_fields.self();
-        if (fields->m_openPackSelectPopup) {
-            MenuLayer::openOptions(false);
-            PackSelectPopup::create()->show();
-            fields->m_openPackSelectPopup = false;
-            return;
-        }
-        MenuLayer::openOptions(videoOptions);
-    }
-};
 
 void PackSelectPopup::onApply(CCObject*) {
     PackManager::get()->applyPacks(+[]() -> CCLayer* {

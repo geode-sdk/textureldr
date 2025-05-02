@@ -51,12 +51,12 @@ bool PackSelectPopup::init() {
     int availCount = PackManager::get()->getAvailablePacks().size();
     int appliedCount = PackManager::get()->getAppliedPacks().size();
 
-    auto infoLabel = CCLabelBMFont::create(fmt::format("Available: {}\nApplied: {}\nTotal: {}", availCount, appliedCount, availCount + appliedCount).c_str(), "chatFont.fnt");
-    infoLabel->setPosition({70, 25});
-    infoLabel->setID("info-text");
-    infoLabel->setScale(.45f);
-    infoLabel->setOpacity(200.f);
-    m_mainLayer->addChild(infoLabel);
+    m_infoLabel = CCLabelBMFont::create(fmt::format("Available: {}\nApplied: {}\nTotal: {}", availCount, appliedCount, availCount + appliedCount).c_str(), "chatFont.fnt");
+    m_infoLabel->setPosition({70, 25});
+    m_infoLabel->setID("info-text");
+    m_infoLabel->setScale(.45f);
+    m_infoLabel->setOpacity(200.f);
+    m_mainLayer->addChild(m_infoLabel);
 
     auto reloadSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     reloadSpr->setScale(.7f);
@@ -177,6 +177,10 @@ void PackSelectPopup::updateList(
     if (resetPos) {
         list->moveToTop();
     }
+
+    int availCount = PackManager::get()->getAvailablePacks().size();
+    int appliedCount = PackManager::get()->getAppliedPacks().size();
+    m_infoLabel->setString(fmt::format("Available: {}\nApplied: {}\nTotal: {}", availCount, appliedCount, availCount + appliedCount).c_str());
 }
 
 void PackSelectPopup::updateLists(bool resetPos) {

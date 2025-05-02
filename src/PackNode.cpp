@@ -90,10 +90,11 @@ bool PackNode::init(
     else {
         PackInfo packInfo = m_pack->getInfo().value();
         CCLabelBMFont* extraInfoLabel = CCLabelBMFont::create(fmt::format("{} | {}", packInfo.m_version.toNonVString(), packInfo.m_id).c_str(), "bigFont.fnt");
-        extraInfoLabel->setColor({127, 127, 127});
-        extraInfoLabel->setScale(0.15f);
+        extraInfoLabel->setColor({165, 165, 165});
+        extraInfoLabel->limitLabelWidth(125.f, 0.2f, 0.1f);
+        extraInfoLabel->setScale(0.2f);
         extraInfoLabel->setAnchorPoint({0, 0.5f});
-        extraInfoLabel->setOpacity(127);
+        extraInfoLabel->setOpacity(165);
         extraInfoLabel->setPosition({40, 8});
         extraInfoLabel->setZOrder(-1);
         extraInfoLabel->setID("extra-info-text");
@@ -101,14 +102,15 @@ bool PackNode::init(
         this->addChild(extraInfoLabel);
 
         CCLabelBMFont* authorLabel = CCLabelBMFont::create(packInfo.m_authors.at(0).c_str(), "goldFont.fnt");
+        authorLabel->limitLabelWidth(125.f, 0.3f, 0.1f);
         authorLabel->setAnchorPoint({0, 0.5f});
-        authorLabel->setPosition({40.2, 15});
+        authorLabel->setPosition({40.2, 16});
         authorLabel->setZOrder(-1);
-        authorLabel->setScale(0.25f);
+        authorLabel->setScale(0.3f);
         authorLabel->setID("author-text");
         this->addChild(authorLabel);
 
-        nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight()-10});
+        nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight() - 9.5f});
     }
 
     applyArrowSpr->setAnchorPoint(ccp(0, 0));

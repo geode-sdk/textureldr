@@ -36,6 +36,7 @@ bool PackNode::init(
     menu->setPosition({0, 0});
 
     auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
+    logo->setID("pack-logo");
 
     if (!logo || logo->getUserObject("fallback"_spr)) {
         logo = CCSprite::create("noLogo.png"_spr);

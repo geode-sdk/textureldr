@@ -8,7 +8,6 @@
 using namespace geode::prelude;
 
 class $modify(MyOptionsLayer, OptionsLayer) {
-
     void customSetup() {
         OptionsLayer::customSetup();
         if (CCNode* optionsMenu = m_mainLayer->getChildByID("options-menu")) {

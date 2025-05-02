@@ -54,6 +54,7 @@ bool PackNode::init(
     nameLabel->limitLabelWidth(125.f, 0.40f, 0.1f);
     nameLabel->setPositionX(0);
     nameLabel->setAnchorPoint({0, 0.5f});
+    nameLabel->setID("pack-name-text");
 
     auto nameButton = CCMenuItemSpriteExtra::create(
         nameLabel, this, menu_selector(PackNode::onView)
@@ -95,6 +96,8 @@ bool PackNode::init(
         extraInfoLabel->setOpacity(127);
         extraInfoLabel->setPosition({40, 8});
         extraInfoLabel->setZOrder(-1);
+        extraInfoLabel->setID("extra-info-text");
+
         this->addChild(extraInfoLabel);
 
         CCLabelBMFont* authorLabel = CCLabelBMFont::create(packInfo.m_authors.at(0).c_str(), "goldFont.fnt");
@@ -102,6 +105,7 @@ bool PackNode::init(
         authorLabel->setPosition({40.2, 15});
         authorLabel->setZOrder(-1);
         authorLabel->setScale(0.25f);
+        authorLabel->setID("author-text");
         this->addChild(authorLabel);
 
         nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight()-10});

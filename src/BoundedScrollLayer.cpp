@@ -3,7 +3,6 @@
 
 // a bit hacky but allows for multiple scroll layers at once
 class $modify(CCMouseDispatcher) {
-
 	bool dispatchScrollMSG(float x, float y) {
         for (CCMouseHandler* handler : CCArrayExt<CCMouseHandler*>(m_pMouseHandlers)) {
             if (BoundedScrollLayer* scroll = typeinfo_cast<BoundedScrollLayer*>(handler->getDelegate())) {
@@ -24,7 +23,6 @@ BoundedScrollLayer* BoundedScrollLayer::create(CCSize const& size) {
 }
 
 bool BoundedScrollLayer::testLocation(CCPoint point) {
-    
     CCPoint mousePoint = convertToNodeSpace({point.x + getPositionX(), point.y + getPositionY()});
 
     if (boundingBox().containsPoint(mousePoint)) {

@@ -99,8 +99,14 @@ class $modify(CCSpriteFrameCache) {
             }
         }
 
+        // check if the fallback was already added
+        auto fallbackFrame = CCSpriteFrameCache::spriteFrameByName(name);
+        if (fallbackFrame) {
+            return fallbackFrame;
+        }
+
         // create the fallback frame and add to cache
-        auto fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
+        fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
         fallbackFrame->setTag(FALLBACK_TAG);
         this->addSpriteFrame(fallbackFrame, name);
 

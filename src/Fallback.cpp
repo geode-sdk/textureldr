@@ -35,9 +35,12 @@ class $modify(CCSprite) {
         if (sprite == nullptr) {
             auto textureCache = CCTextureCache::get();
             auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey(name));
-            if (!fallbackTexture) {
+            if (fallbackTexture == nullptr) {
                 fallbackTexture = generateFallback();
                 textureCache->m_pTextures->setObject(fallbackTexture, name);
+                if (fallbackTexture == nullptr) {
+                    fallbackTexture = textureCache->textureForKey("bigFont.png");
+                }
             }
 
             sprite = CCSprite::createWithTexture(fallbackTexture);
@@ -52,10 +55,15 @@ class $modify(CCSprite) {
         // we check for tag instead of the frame name because this is significantly better for performance
         bool needFallback = !spriteFrame || spriteFrame->getTag() == FALLBACK_TAG;
 
-        CCSprite* sprite = CCSprite::createWithSpriteFrame(spriteFrame);
-        if (needFallback) {
-            assignFallbackObj(sprite);
+        if (!needFallback) {
+            return CCSprite::createWithSpriteFrame(spriteFrame);
         }
+
+        CCSprite* sprite = CCSprite::createWithSpriteFrame(spriteFrame);
+        if (sprite == nullptr) {
+            sprite = CCSprite::create("bigFont.png");
+        }
+        assignFallbackObj(sprite);
         return sprite;
     }
 
@@ -107,8 +115,10 @@ class $modify(CCSpriteFrameCache) {
 
         // create the fallback frame and add to cache
         fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
-        fallbackFrame->setTag(FALLBACK_TAG);
-        this->addSpriteFrame(fallbackFrame, name);
+        if (fallbackFrame) {
+            fallbackFrame->setTag(FALLBACK_TAG);
+            this->addSpriteFrame(fallbackFrame, name);
+        }
 
         return fallbackFrame;
     }

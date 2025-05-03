@@ -251,7 +251,8 @@ void PackSelectPopup::reorderDragging() {
         listTo.first->m_contentLayer->getPosition() + listTo.first->m_contentLayer->getContentSize()).y;
     const auto nodeY = m_draggingNode->getPosition().y;
 
-    auto targetIdx = static_cast<size_t>(std::max((listTop - nodeY) / PackNode::HEIGHT, 0.f));
+    auto count = static_cast<float>(listTo.first->m_contentLayer->getChildrenCount());
+    auto targetIdx = static_cast<size_t>(std::clamp((listTop - nodeY) / PackNode::HEIGHT, 0.f, count));
 
     if (targetIdx == m_lastDragIdx && listTypeTo == m_dragListTo) return;
 

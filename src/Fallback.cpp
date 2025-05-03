@@ -38,12 +38,13 @@ class $modify(CCSprite) {
             if (fallbackTexture == nullptr) {
                 fallbackTexture = generateFallback();
                 textureCache->m_pTextures->setObject(fallbackTexture, name);
-                if (fallbackTexture == nullptr) {
-                    fallbackTexture = textureCache->textureForKey("bigFont.png");
-                }
             }
 
             sprite = CCSprite::createWithTexture(fallbackTexture);
+            // in dire cases, since no one is stupid enough to delete this texture
+            if (sprite == nullptr) {
+                sprite = CCSprite::create("bigFont.png");
+            }
             assignFallbackObj(sprite);
         }
         return sprite;
@@ -115,6 +116,7 @@ class $modify(CCSpriteFrameCache) {
 
         // create the fallback frame and add to cache
         fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
+
         if (fallbackFrame) {
             fallbackFrame->setTag(FALLBACK_TAG);
             this->addSpriteFrame(fallbackFrame, name);

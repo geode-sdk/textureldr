@@ -34,13 +34,15 @@ class $modify(CCSprite) {
         auto* sprite = CCSprite::create(name);
         if (sprite == nullptr) {
             auto textureCache = CCTextureCache::get();
-            auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey(name));
-            if (fallbackTexture == nullptr) {
-                fallbackTexture = generateFallback();
-                textureCache->m_pTextures->setObject(fallbackTexture, name);
+            auto texture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey(name));
+            if (texture == nullptr) {
+                texture = generateFallback();
+                if (texture != nullptr) {
+                    textureCache->m_pTextures->setObject(texture, name);
+                }
             }
 
-            sprite = CCSprite::createWithTexture(fallbackTexture);
+            sprite = CCSprite::createWithTexture(texture);
             // in dire cases, since no one is stupid enough to delete this texture
             if (sprite == nullptr) {
                 sprite = CCSprite::create("bigFont.png");

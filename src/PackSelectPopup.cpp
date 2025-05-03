@@ -207,9 +207,26 @@ void PackSelectPopup::onReloadPacks(CCObject*) {
     Notification::create(fmt::format("Loaded {} packs", count), NotificationIcon::Success, 0.5f)->show();
 }
 
+std::pair<PackListType, size_t> PackSelectPopup::getPackListTypeAndIndex(const std::shared_ptr<Pack>& pack) {
+    auto manager = PackManager::get();
+    const auto& applied = manager->getAppliedPacks();
+    const auto& available = manager->getAvailablePacks();
+
+    auto it = std::find(applied.begin(), applied.end(), pack);
+    if (it != applied.end()) {
+        return { PackListType::Applied, static_cast<size_t>(std::distance(applied.begin(), it)) };
+    }
+
+    it = std::find(available.begin(), available.end(), pack);
+    return { PackListType::Available, static_cast<size_t>(std::distance(available.begin(), it)) };
+}
 void PackSelectPopup::startDragging(PackNode* node) {
     m_draggingNode = node;
-    m_lastDragIdx = -1;
+
+    // set initial information, else clicking with no drag can cause it to move to available
+    auto packData = getPackListTypeAndIndex(node->getPack());
+    m_dragListTo = packData.first;
+    m_lastDragIdx = packData.second;
     auto const pos = node->getParent()->convertToWorldSpace(node->getPosition());
 
     // remove from the scroll layer

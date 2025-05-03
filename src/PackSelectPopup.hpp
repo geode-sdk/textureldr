@@ -36,6 +36,7 @@ protected:
     );
 
     PackListType whereDragList();
+    std::pair<PackListType, size_t> getPackListTypeAndIndex(const std::shared_ptr<Pack>& pack);
 
 public:
     static PackSelectPopup* create();

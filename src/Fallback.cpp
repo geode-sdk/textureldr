@@ -11,45 +11,21 @@ static void assignFallbackObj(CCNode* node) {
 }
 
 static CCTexture2D* generateFallback() {
-    int width = 32 * CCDirector::get()->getContentScaleFactor();
-    uint8_t* data = new uint8_t[width * width * 4];
-    for (int y = 0; y < width / 2; y++) {
-        for (int x = 0; x < width / 2; x++) {
-            auto i = (y * width + x) * 4;
-            data[i] = 0xFF;
-            data[i + 1] = 0x00;
-            data[i + 2] = 0xDC;
-            data[i + 3] = 0xFF;
-        }
-        for (int x = width / 2; x < width; x++) {
-            auto i = (y * width + x) * 4;
-            data[i] = 0x00;
-            data[i + 1] = 0x00;
-            data[i + 2] = 0x00;
-            data[i + 3] = 0xFF;
-        }
-    }
-    for (int y = width / 2; y < width; y++) {
-        for (int x = 0; x < width / 2; x++) {
-            auto i = (y * width + x) * 4;
-            data[i] = 0x00;
-            data[i + 1] = 0x00;
-            data[i + 2] = 0x00;
-            data[i + 3] = 0xFF;
-        }
-        for (int x = width / 2; x < width; x++) {
-            auto i = (y * width + x) * 4;
-            data[i] = 0xFF;
-            data[i + 1] = 0x00;
-            data[i + 2] = 0xDC;
-            data[i + 3] = 0xFF;
-        }
+    auto* image = new CCImage();
+    if (!image->initWithImageFile("fallback.png"_spr)) {
+        image->release();
+        return nullptr;
     }
 
-    auto texture = new CCTexture2D();
-    texture->initWithData(data, kCCTexture2DPixelFormat_RGBA8888, width, width, ccp(width, width));
+    auto* texture = new CCTexture2D();
+    auto result = texture->initWithImage(image);
+    image->release();
+    if (!result) {
+        texture->release();
+        return nullptr;
+    }
+
     texture->autorelease();
-    delete[] data;
     return texture;
 }
 
@@ -58,10 +34,10 @@ class $modify(CCSprite) {
         auto* sprite = CCSprite::create(name);
         if (sprite == nullptr) {
             auto textureCache = CCTextureCache::get();
-            auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey("fallback.png"_spr));
+            auto fallbackTexture = static_cast<CCTexture2D*>(textureCache->m_pTextures->objectForKey(name));
             if (!fallbackTexture) {
                 fallbackTexture = generateFallback();
-                textureCache->m_pTextures->setObject(fallbackTexture, "fallback.png"_spr);
+                textureCache->m_pTextures->setObject(fallbackTexture, name);
             }
 
             sprite = CCSprite::createWithTexture(fallbackTexture);

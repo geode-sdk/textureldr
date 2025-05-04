@@ -110,10 +110,8 @@ class $modify(CCSpriteFrameCache) {
             }
         }
         
-        CCSpriteFrame* fallbackFrame = nullptr;
-
         // create the fallback frame and add to cache
-        fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
+        auto fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
 
         if (fallbackFrame) {
             fallbackFrame->setTag(FALLBACK_TAG);

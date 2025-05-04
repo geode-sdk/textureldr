@@ -25,6 +25,7 @@ static CCTexture2D* generateFallback() {
         return nullptr;
     }
 
+    texture->setTag(FALLBACK_TAG);
     texture->autorelease();
     return texture;
 }
@@ -109,7 +110,7 @@ class $modify(CCSpriteFrameCache) {
                 return frame;
             }
         }
-        
+
         // create the fallback frame and add to cache
         auto fallbackFrame = CCSpriteFrame::createWithTexture(generateFallback(), {ccp(0, 0), ccp(32, 32)});
 

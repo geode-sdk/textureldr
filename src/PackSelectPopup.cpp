@@ -17,15 +17,30 @@ class $modify(ReloadMenuLayer, MenuLayer) {
         bool m_openPackSelectPopup = false;
     };
 
-    void onOptionsInstant() {
-        auto fields = m_fields.self();
-        if (fields->m_openPackSelectPopup) {
-            MenuLayer::onOptionsInstant();
-            PackSelectPopup::create()->show();
-            fields->m_openPackSelectPopup = false;
-            return;
+    static CCScene* scene(bool isVideoOptionsOpen) {
+        auto ret = MenuLayer::scene(false);
+        auto menuLayer = ret->getChildByType<MenuLayer*>(0);
+
+        if (isVideoOptionsOpen) {
+            CCCallFunc* callback = cocos2d::CCCallFunc::create(menuLayer, callfunc_selector(ReloadMenuLayer::doOpenOptions));
+            CCDelayTime* delay = cocos2d::CCDelayTime::create(0.0f);
+            CCSequence* sequence = cocos2d::CCSequence::create(delay, callback, nullptr);
+            menuLayer->runAction(sequence);
         }
-        MenuLayer::onOptionsInstant();
+        return ret;
+    }
+
+    void doOpenOptions() {
+        auto optionsLayer = OptionsLayer::create();
+        optionsLayer->showLayer(true);
+        bool isDesktop = false;
+        #ifdef GEODE_IS_DESKTOP
+        isDesktop = true;
+        #endif
+        if (isDesktop || Loader::get()->isModLoaded("weebify.high-graphics-android")) {
+            optionsLayer->onVideo(nullptr);
+        }
+        PackSelectPopup::create()->show();
     }
 };
 
@@ -190,7 +205,6 @@ void PackSelectPopup::updateLists(bool resetPos) {
 
 void PackSelectPopup::onApply(CCObject*) {
     PackManager::get()->applyPacks(+[]() -> CCLayer* {
-        
         CCScene* scene = MenuLayer::scene(true);
         ReloadMenuLayer* menuLayer = static_cast<ReloadMenuLayer*>(scene->getChildByType<MenuLayer*>(0));
         menuLayer->m_fields->m_openPackSelectPopup = true;

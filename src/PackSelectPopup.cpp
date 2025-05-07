@@ -21,6 +21,7 @@ class $modify(ReloadMenuLayer, MenuLayer) {
         auto ret = MenuLayer::scene(false);
         auto menuLayer = ret->getChildByType<MenuLayer*>(0);
 
+        // the robtop delay
         if (isVideoOptionsOpen) {
             CCCallFunc* callback = cocos2d::CCCallFunc::create(menuLayer, callfunc_selector(ReloadMenuLayer::doOpenOptions));
             CCDelayTime* delay = cocos2d::CCDelayTime::create(0.0f);

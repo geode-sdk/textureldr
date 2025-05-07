@@ -37,10 +37,14 @@ bool PackNode::init(
     menu->setPosition({0, 0});
 
     auto logo = LazySprite::create({ HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, true);
-    logo->setLoadCallback([logo](Result<> res) {
+    logo->setLoadCallback([this, logo](Result<> res) {
         if (res.isErr()) {
-            logo->loadFromFile("noLogo.png"_spr);
-            logo->setOpacity(100);
+            CCSprite* noLogo = CCSprite::create("noLogo.png"_spr);
+            noLogo->setOpacity(100);
+            noLogo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
+            limitNodeSize(noLogo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
+            logo->removeFromParent();
+            this->addChild(noLogo);
         }
         else {
             limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);

@@ -1,5 +1,6 @@
 #include "PackNode.hpp"
 #include <Geode/binding/CCMenuItemToggler.hpp>
+#include <Geode/ui/LazySprite.hpp>
 #include "PackManager.hpp"
 #include "PackSelectPopup.hpp"
 #include "PackInfoPopup.hpp"
@@ -35,18 +36,20 @@ bool PackNode::init(
     menu->setContentSize(this->getContentSize());
     menu->setPosition({0, 0});
 
-    auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
-
-    if (!logo || logo->getUserObject("fallback"_spr)) {
-        logo = CCSprite::create("noLogo.png"_spr);
-        if (logo)
+    auto logo = LazySprite::create({ HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, true);
+    logo->setLoadCallback([logo](Result<> res) {
+        if (res.isErr()) {
+            logo->loadFromFile("noLogo.png"_spr);
             logo->setOpacity(100);
-    }
-    if (logo) {
-        logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
-        limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
-        this->addChild(logo);
-    }
+        }
+        else {
+            limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
+        }
+    });
+    logo->loadFromFile((pack->getResourcesPath() / "pack.png"));
+    logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
+    this->addChild(logo);
+    
     logo->setID("pack-logo");
 
     auto nameLabel = CCLabelBMFont::create(

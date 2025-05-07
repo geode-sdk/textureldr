@@ -17,15 +17,15 @@ class $modify(ReloadMenuLayer, MenuLayer) {
         bool m_openPackSelectPopup = false;
     };
 
-    void openOptions(bool videoOptions) {
+    void onOptionsInstant() {
         auto fields = m_fields.self();
         if (fields->m_openPackSelectPopup) {
-            MenuLayer::openOptions(false);
+            MenuLayer::onOptionsInstant();
             PackSelectPopup::create()->show();
             fields->m_openPackSelectPopup = false;
             return;
         }
-        MenuLayer::openOptions(videoOptions);
+        MenuLayer::onOptionsInstant();
     }
 };
 
@@ -190,6 +190,7 @@ void PackSelectPopup::updateLists(bool resetPos) {
 
 void PackSelectPopup::onApply(CCObject*) {
     PackManager::get()->applyPacks(+[]() -> CCLayer* {
+        
         CCScene* scene = MenuLayer::scene(true);
         ReloadMenuLayer* menuLayer = static_cast<ReloadMenuLayer*>(scene->getChildByType<MenuLayer*>(0));
         menuLayer->m_fields->m_openPackSelectPopup = true;

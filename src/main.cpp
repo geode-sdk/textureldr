@@ -15,7 +15,7 @@ class $modify(MyOptionsLayer, OptionsLayer) {
         if (CCNode* optionsMenu = m_mainLayer->getChildByID("options-menu")) {
             if (optionsMenu->getChildByID("graphics-button")) return;
 
-            ButtonSprite* buttonSprite = ButtonSprite::create("Textures", 130, true, "goldFont.fnt", "GJ_button_01.png", 30, 1);
+            ButtonSprite* buttonSprite = ButtonSprite::create("Textures", 130, true, "goldFont.fnt", "GJ_button_01.png", 32, 1);
 
             CCMenuItemSpriteExtra* textureLoaderBtn = CCMenuItemSpriteExtra::create(buttonSprite, this, menu_selector(MyOptionsLayer::onTextureLdr));
 

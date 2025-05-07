@@ -1,6 +1,7 @@
 #include "BoundedScrollLayer.hpp"
 #include <Geode/modify/CCMouseDispatcher.hpp>
 
+#ifndef GEODE_IS_IOS
 // a bit hacky but allows for multiple scroll layers at once
 class $modify(CCMouseDispatcher) {
 	bool dispatchScrollMSG(float x, float y) {
@@ -14,6 +15,7 @@ class $modify(CCMouseDispatcher) {
         return CCMouseDispatcher::dispatchScrollMSG(x, y);
     }
 };
+#endif
 
 
 BoundedScrollLayer* BoundedScrollLayer::create(CCSize const& size) {

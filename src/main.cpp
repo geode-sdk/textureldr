@@ -88,7 +88,7 @@ class $modify(MyMenuLayer, MenuLayer) {
         bool isDesktop = false;
         #ifdef GEODE_IS_DESKTOP
         isDesktop = true;
-        #endif;
+        #endif
         // Prompt where the button is relocated, since many mobile users use the high graphics mod, we want to direct them to the right place still.
         if (isDesktop || Loader::get()->isModLoaded("weebify.high-graphics-android")) {
             createQuickPopup("Woah!", "Texture Loader has been moved into <cb>Graphics Settings</c>, go to graphics settings and click the <cg>Textures</c> button to manage your Texture Packs!", "I UNDERSTAND", nullptr, [] (FLAlertLayer*, bool selected) {

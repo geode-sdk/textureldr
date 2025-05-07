@@ -19,7 +19,7 @@ protected:
     size_t m_lastDragIdx = size_t(-1);
     PackListType m_dragListFrom, m_dragListTo;
 
-    bool setup() { return true; };
+    bool setup() override { return true; }
     bool init() override;
 
     void updateList(

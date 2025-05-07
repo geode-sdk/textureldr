@@ -293,7 +293,8 @@ void PackSelectPopup::scrollOnDrag(PackListType type, bool up) {
     int direction = up ? -1 : 1;
     float nextY = list->m_contentLayer->getPositionY() + direction * PackNode::HEIGHT;
 
-    if (nextY >= 0 || nextY <= -list->m_contentLayer->getContentHeight() + list->getContentHeight()) return;
+    float minY = -list->m_contentLayer->getContentHeight() + list->getContentHeight();
+    nextY = std::min(0.0f, std::max(minY, nextY));    
 
     auto action = CCEaseInOut::create(CCMoveTo::create(0.3, {list->m_contentLayer->getPositionX(), nextY}), 2.f);
     list->m_contentLayer->stopAllActions();

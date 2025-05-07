@@ -42,7 +42,8 @@ public:
     static PackSelectPopup* create();
     
     void updateLists(bool resetPos = true);
-
+    void scrollSchedule(float dt);
+    void scrollOnDrag(PackListType type, bool up);
     void onApply(CCObject*);
 
     void onOpenFolder(CCObject*);

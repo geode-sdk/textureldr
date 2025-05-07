@@ -252,6 +252,7 @@ void PackSelectPopup::startDragging(PackNode* node) {
     node->release();
     
     node->setPosition(this->convertToNodeSpace(pos));
+    this->schedule(schedule_selector(PackSelectPopup::scrollSchedule), 0.3);
 
     m_dragListFrom = this->whereDragList();
 }
@@ -268,6 +269,35 @@ PackListType PackSelectPopup::whereDragList() {
 
 void PackSelectPopup::moveDrag(const CCPoint& offset) {
     m_draggingNode->setPosition(m_draggingNode->getPosition() + offset);
+    this->reorderDragging();
+}
+
+void PackSelectPopup::scrollSchedule(float dt) {
+    auto x = m_draggingNode->getPosition().x;
+    auto centerY = m_draggingNode->getPosition().y - PackNode::HEIGHT / 2;
+
+    bool up = centerY > m_availableList->getPositionY() + m_availableList->getContentHeight();
+    bool down = centerY < m_availableList->getPositionY();
+
+    if (up || down) {
+        if (x > getContentWidth() / 2.f) {
+            scrollOnDrag(PackListType::Applied, up);
+        } else {
+            scrollOnDrag(PackListType::Available, up);
+        }
+    }
+}
+
+void PackSelectPopup::scrollOnDrag(PackListType type, bool up) {
+    auto list = type == PackListType::Available ? m_availableList : m_appliedList;
+    int direction = up ? -1 : 1;
+    float nextY = list->m_contentLayer->getPositionY() + direction * PackNode::HEIGHT;
+
+    if (nextY >= 0 || nextY <= -list->m_contentLayer->getContentHeight() + list->getContentHeight()) return;
+
+    auto action = CCEaseInOut::create(CCMoveTo::create(0.3, {list->m_contentLayer->getPositionX(), nextY}), 2.f);
+    list->m_contentLayer->stopAllActions();
+    list->m_contentLayer->runAction(action);
     this->reorderDragging();
 }
 
@@ -334,6 +364,7 @@ void PackSelectPopup::reorderList(ScrollLayer* list, std::vector<std::shared_ptr
 
 void PackSelectPopup::stopDrag() {
     PackManager::get()->movePackToIdx(m_draggingNode->getPack(), m_dragListTo, m_lastDragIdx);
+    this->unschedule(schedule_selector(PackSelectPopup::scrollSchedule));
 
     m_draggingNode->removeFromParent();
 

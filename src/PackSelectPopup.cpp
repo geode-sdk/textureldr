@@ -252,7 +252,7 @@ void PackSelectPopup::startDragging(PackNode* node) {
     node->release();
     
     node->setPosition(this->convertToNodeSpace(pos));
-    this->schedule(schedule_selector(PackSelectPopup::scrollSchedule), 0.3);
+    this->schedule(schedule_selector(PackSelectPopup::scrollSchedule), 0.15f);
 
     m_dragListFrom = this->whereDragList();
 }
@@ -296,7 +296,7 @@ void PackSelectPopup::scrollOnDrag(PackListType type, bool up) {
     float minY = -list->m_contentLayer->getContentHeight() + list->getContentHeight();
     nextY = std::min(0.0f, std::max(minY, nextY));
 
-    auto action = CCEaseInOut::create(CCMoveTo::create(0.3, {list->m_contentLayer->getPositionX(), nextY}), 2.f);
+    auto action = CCMoveTo::create(0.15f, {list->m_contentLayer->getPositionX(), nextY});
     list->m_contentLayer->stopAllActions();
     list->m_contentLayer->runAction(action);
     this->reorderDragging();

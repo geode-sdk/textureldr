@@ -276,8 +276,10 @@ void PackSelectPopup::scrollSchedule(float dt) {
     auto x = m_draggingNode->getPosition().x;
     auto centerY = m_draggingNode->getPosition().y - PackNode::HEIGHT / 2;
 
-    bool up = centerY > m_availableList->getPositionY() + m_availableList->getContentHeight();
-    bool down = centerY < m_availableList->getPositionY();
+    float offset = 10;
+
+    bool up = centerY + offset > m_availableList->getPositionY() + m_availableList->getContentHeight();
+    bool down = centerY - offset < m_availableList->getPositionY();
 
     if (up || down) {
         if (x > getContentWidth() / 2.f) {

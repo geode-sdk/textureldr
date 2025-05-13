@@ -1,19 +1,20 @@
 #include "PackNode.hpp"
 #include <Geode/binding/CCMenuItemToggler.hpp>
+#include <Geode/ui/LazySprite.hpp>
 #include "PackManager.hpp"
-#include "PackSelectLayer.hpp"
+#include "PackSelectPopup.hpp"
 #include "PackInfoPopup.hpp"
 #include "DragThingy.hpp"
 
 bool PackNode::init(
-    PackSelectLayer* layer,
+    PackSelectPopup* layer,
     const std::shared_ptr<Pack>& pack,
     float width
 ) {
     if (!CCNode::init())
         return false;
 
-    constexpr float HEIGHT = PackNode::HEIGHT;
+    constexpr float HEIGHT = PackNode::HEIGHT / .88f;
     constexpr float SPACE_FOR_MENU = 50.f;
     constexpr float MOVE_OFFSET = 20.f;
     constexpr float SPACE_FOR_LOGO = HEIGHT;
@@ -32,24 +33,31 @@ bool PackNode::init(
     auto menu = CCMenu::create();
     menu->setPosition(menuPosX, HEIGHT / 2);
     menu->setID("pack-button-menu");
+    menu->setContentSize(this->getContentSize());
+    menu->setPosition({0, 0});
 
-    auto logo = CCSprite::create((pack->getResourcesPath() / "pack.png").string().c_str());
-
-    if (!logo || logo->getUserObject("fallback"_spr)) {
-        logo = CCSprite::create("noLogo.png"_spr);
-        if (logo)
+	auto logoSize = CCSize { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 };
+    auto logo = LazySprite::create(logoSize, true);
+    logo->setLoadCallback([this, logo, logoSize](Result<> res) {
+        if (res.isErr()) {
+            logo->CCSprite::initWithFile("noLogo.png"_spr);
             logo->setOpacity(100);
-    }
-    if (logo) {
-        logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
-        limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
-        this->addChild(logo);
-    }
+        }
+        limitNodeSize(logo, logoSize, 1.f, .1f);
+    });
+    logo->loadFromFile((pack->getResourcesPath() / "pack.png"));
+    logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
+    this->addChild(logo);
+    
+    logo->setID("pack-logo");
 
     auto nameLabel = CCLabelBMFont::create(
         m_pack->getDisplayName().c_str(), "bigFont.fnt"
     );
-    nameLabel->limitLabelWidth(labelWidth, .65f, .1f);
+    nameLabel->limitLabelWidth(125.f, 0.40f, 0.1f);
+    nameLabel->setPositionX(0);
+    nameLabel->setAnchorPoint({0, 0.5f});
+    nameLabel->setID("pack-name-text");
 
     auto nameButton = CCMenuItemSpriteExtra::create(
         nameLabel, this, menu_selector(PackNode::onView)
@@ -58,7 +66,10 @@ bool PackNode::init(
         PADDING + SPACE_FOR_LOGO + nameLabel->getScaledContentSize().width / 2 - menuPosX,
         0
     );
+
     nameButton->setID("pack-name-button");
+    nameButton->setContentWidth(nameLabel->getScaledContentWidth());
+    nameButton->setEnabled(false);
     menu->addChild(nameButton);
 
     auto applyArrowSpr = CCSprite::create("dragIcon.png"_spr);
@@ -75,27 +86,57 @@ bool PackNode::init(
             m_layer->stopDrag();
         }
     );
+
+    if (!m_pack->getInfo().has_value()) {
+        nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight()/2});
+    }
+    else {
+        PackInfo packInfo = m_pack->getInfo().value();
+        CCLabelBMFont* extraInfoLabel = CCLabelBMFont::create(fmt::format("{} | {}", packInfo.m_version.toNonVString(), packInfo.m_id).c_str(), "bigFont.fnt");
+        extraInfoLabel->setColor({165, 165, 165});
+        extraInfoLabel->limitLabelWidth(125.f, 0.2f, 0.1f);
+        extraInfoLabel->setScale(0.2f);
+        extraInfoLabel->setAnchorPoint({0, 0.5f});
+        extraInfoLabel->setOpacity(165);
+        extraInfoLabel->setPosition({40, 8});
+        extraInfoLabel->setZOrder(-1);
+        extraInfoLabel->setID("extra-info-text");
+
+        this->addChild(extraInfoLabel);
+
+        CCLabelBMFont* authorLabel = CCLabelBMFont::create(packInfo.m_authors.at(0).c_str(), "goldFont.fnt");
+        authorLabel->limitLabelWidth(125.f, 0.3f, 0.1f);
+        authorLabel->setAnchorPoint({0, 0.5f});
+        authorLabel->setPosition({40.2, 16});
+        authorLabel->setZOrder(-1);
+        authorLabel->setScale(0.3f);
+        authorLabel->setID("author-text");
+        this->addChild(authorLabel);
+
+        nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight() - 9.5f});
+    }
+
     applyArrowSpr->setAnchorPoint(ccp(0, 0));
     dragHandle->addChild(applyArrowSpr);
     dragHandle->setContentSize(applyArrowSpr->getScaledContentSize());
     dragHandle->setID("apply-pack-button");
     dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
     dragHandle->setTouchPriority(-130);
+
     this->addChild(dragHandle);
 
-    auto dragBg = CCScale9Sprite::create(
-        "square02b_001.png", { 0, 0, 80, 80 }
+    m_draggingBg = CCScale9Sprite::create(
+        "square02b_001.png"
     );
-    dragBg->setColor({ 0, 0, 0 });
-    dragBg->setOpacity(90);
-    const float bgScaling = 0.5f;
-    dragBg->setContentSize(this->getContentSize() / bgScaling);
-    dragBg->setScale(bgScaling);
-    dragBg->setPosition({ width / 2.f, HEIGHT / 2.f });
-    dragBg->setZOrder(-10);
-    this->addChild(dragBg);
-    m_draggingBg = dragBg;
-    dragBg->setVisible(false);
+    m_draggingBg->setCapInsets({10, 10, 50, 50});
+    m_draggingBg->setColor({ 0, 0, 0 });
+    m_draggingBg->setOpacity(90);
+    m_draggingBg->setContentSize(this->getContentSize());
+    m_draggingBg->setPosition({ width / 2.f, HEIGHT / 2.f });
+    m_draggingBg->setZOrder(-10);
+    m_draggingBg->setVisible(false);
+    
+    this->addChild(m_draggingBg);
 
     this->addChild(menu);
 
@@ -107,7 +148,7 @@ void PackNode::onView(CCObject*) {
 }
 
 PackNode* PackNode::create(
-    PackSelectLayer* layer,
+    PackSelectPopup* layer,
     const std::shared_ptr<Pack>& pack,
     float width
 ) {

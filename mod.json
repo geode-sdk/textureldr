@@ -22,5 +22,8 @@
 	},
 	"api": {
 		"include": ["include/*.hpp"]
+	},
+	"dependencies": {
+		"geode.node-ids": "1.20.1"
 	}
 }

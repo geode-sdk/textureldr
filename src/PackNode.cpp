@@ -36,13 +36,14 @@ bool PackNode::init(
     menu->setContentSize(this->getContentSize());
     menu->setPosition({0, 0});
 
-    auto logo = LazySprite::create({ HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, true);
-    logo->setLoadCallback([this, logo](Result<> res) {
+	auto logoSize = CCSize { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 };
+    auto logo = LazySprite::create(logoSize, true);
+    logo->setLoadCallback([this, logo, logoSize](Result<> res) {
         if (res.isErr()) {
-            logo->initWithFile("noLogo.png"_spr);
+            logo->CCSprite::initWithFile("noLogo.png"_spr);
             logo->setOpacity(100);
         }
-        limitNodeSize(logo, { HEIGHT - PADDING * 2, HEIGHT - PADDING * 2 }, 1.f, .1f);
+        limitNodeSize(logo, logoSize, 1.f, .1f);
     });
     logo->loadFromFile((pack->getResourcesPath() / "pack.png"));
     logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });

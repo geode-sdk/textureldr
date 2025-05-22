@@ -10,6 +10,10 @@ using namespace geode::prelude;
 
 // Mobile support
 class $modify(MyOptionsLayer, OptionsLayer) {
+    static void onModify(auto& self) {
+        std::ignore = self.setHookPriority("OptionsLayer::customSetup", Priority::LatePost);
+    }
+
     void customSetup() {
         OptionsLayer::customSetup();
         if (CCNode* optionsMenu = m_mainLayer->getChildByID("options-menu")) {

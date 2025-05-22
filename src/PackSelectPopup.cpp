@@ -11,36 +11,25 @@
 #include "BoundedScrollLayer.hpp"
 
 // go back to options after apply
+static bool s_openPackSelectPopup = false;
 class $modify(ReloadMenuLayer, MenuLayer) {
-
-    struct Fields {
-        bool m_openPackSelectPopup = false;
-    };
-
     static CCScene* scene(bool isVideoOptionsOpen) {
-        auto ret = MenuLayer::scene(false);
-        auto menuLayer = ret->getChildByType<MenuLayer*>(0);
+        auto scene = MenuLayer::scene(isVideoOptionsOpen);
 
         // the robtop delay
-        if (isVideoOptionsOpen) {
-            CCCallFunc* callback = cocos2d::CCCallFunc::create(menuLayer, callfunc_selector(ReloadMenuLayer::doOpenOptions));
-            CCDelayTime* delay = cocos2d::CCDelayTime::create(0.0f);
+        if (s_openPackSelectPopup) {
+            s_openPackSelectPopup = false;
+            CCCallFunc* callback = cocos2d::CCCallFunc::create(scene, callfunc_selector(ReloadMenuLayer::doOpenOptions));
+            CCDelayTime* delay = cocos2d::CCDelayTime::create(0.03f);
             CCSequence* sequence = cocos2d::CCSequence::create(delay, callback, nullptr);
-            menuLayer->runAction(sequence);
+            // silly but the scene gets recreated by geode  thanks geode
+            auto* layer = scene->getChildByType<CCLayer*>(0);
+            layer->runAction(sequence);
         }
-        return ret;
+        return scene;
     }
 
     void doOpenOptions() {
-        auto optionsLayer = OptionsLayer::create();
-        optionsLayer->showLayer(true);
-        bool isDesktop = false;
-        #ifdef GEODE_IS_DESKTOP
-        isDesktop = true;
-        #endif
-        if (isDesktop || Loader::get()->isModLoaded("weebify.high-graphics-android")) {
-            optionsLayer->onVideo(nullptr);
-        }
         PackSelectPopup::create()->show();
     }
 };
@@ -205,11 +194,13 @@ void PackSelectPopup::updateLists(bool resetPos) {
 }
 
 void PackSelectPopup::onApply(CCObject*) {
+    s_openPackSelectPopup = true;
     PackManager::get()->applyPacks(+[]() -> CCLayer* {
-        CCScene* scene = MenuLayer::scene(true);
-        ReloadMenuLayer* menuLayer = static_cast<ReloadMenuLayer*>(scene->getChildByType<MenuLayer*>(0));
-        menuLayer->m_fields->m_openPackSelectPopup = true;
-        return menuLayer;
+        bool openVideoLayer = GEODE_DESKTOP(true ||) Loader::get()->isModLoaded("weebify.high-graphics-android");
+        CCScene* scene = MenuLayer::scene(openVideoLayer);
+        // silly but no geode util that accepts a scene directly
+        auto* layer = scene->getChildByType<CCLayer*>(0);
+        return layer;
     });
 }
 

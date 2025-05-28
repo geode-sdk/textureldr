@@ -32,6 +32,44 @@ public:
     }
 };
 
+class AwaitButtonPress : public CCObject {
+    Task<void> m_task;
+    std::function<void(bool)> m_finish;
+    std::function<bool()> m_isCancelled;
+    SEL_MenuHandler m_oldSelector;
+    CCObject* m_oldTarget;
+
+    AwaitButtonPress() {
+        this->autorelease();
+        auto [task, finish, _, isCancelled] = Task<void>::spawn();
+        m_task = std::move(task);
+        m_finish = std::move(finish);
+        m_isCancelled = std::move(isCancelled);
+    }
+
+public:
+    static Task<void> create(CCMenuItem* item) {
+        auto* obj = new AwaitButtonPress();
+        obj->m_oldSelector = item->m_pfnSelector;
+        obj->m_oldTarget = item->m_pListener;
+        item->m_pfnSelector = menu_selector(AwaitButtonPress::onPress);
+        item->m_pListener = obj;
+        item->setUserObject("await-button-press"_spr, obj);
+        return obj->m_task;
+    }
+
+    void onPress(CCObject* obj) {
+        auto* item = static_cast<CCMenuItem*>(obj);
+        item->m_pfnSelector = m_oldSelector;
+        item->m_pListener = m_oldTarget;
+        (m_oldTarget->*m_oldSelector)(obj);
+        if (!m_isCancelled()) {
+            m_finish(true);
+        }
+        item->setUserObject("await-button-press"_spr, nullptr);
+    }
+};
+
 void playNewLocationTutorial() {
     auto* layer = MenuLayer::get();
     if (!layer) return;
@@ -48,40 +86,31 @@ void playNewLocationTutorial() {
 
             Ref<CCSprite> arrow = CCSprite::createWithSpriteFrameName("navArrowBtn_001.png");
             arrow->setRotation(90);
-            arrow->setPosition(pos + ccp(0, 20.f));
+            arrow->setPosition(button->getContentSize() / 2.f + ccp(0, 20));
             arrow->runAction(CCRepeatForever::create(
                 CCSequence::createWithTwoActions(
                     CCMoveBy::create(0.2f, ccp(0, 10.f)),
                     CCMoveBy::create(0.2f, ccp(0, -10.f))
                 )
             ));
-            arrow->runAction(CCSequence::createWithTwoActions(
-                CCDelayTime::create(2.f),
-                CCRemoveSelf::create()
-            ));
             arrow->setZOrder(z + 10);
-            CCScene::get()->addChild(arrow);
-
-            // dont want the user pressing it before we do
-            button->setEnabled(false);
+            button->addChild(arrow);
 
             // two circles
-            for (int i = 0; i < 2; ++i) {
-                auto* circle = CCCircleWave::create(0.f, 100.f, 0.5f, false, true);
-                circle->setPosition(pos);
-                circle->setZOrder(z);
-                CCScene::get()->addChild(circle);
-                co_await awaitAction(button, CCDelayTime::create(0.5f));
-            }
+            button->runAction(CCRepeatForever::create(
+                CCSequence::createWithTwoActions(
+                    CallFuncExt::create([=] {
+                        auto* circle = CCCircleWave::create(0.f, 100.f, 0.5f, false, true);
+                        circle->setPosition(pos);
+                        circle->setZOrder(z);
+                        CCScene::get()->addChild(circle);
+                    }),
+                    CCDelayTime::create(0.5f)
+                )
+            ));
 
-            button->setEnabled(true);
-            button->selected();
-
-            co_await awaitAction(button, CCDelayTime::create(0.2f));
-
+            co_await AwaitButtonPress::create(button);
             arrow->removeFromParentAndCleanup(true);
-            button->activate();
-            button->unselected();
         };
 
         auto* settingsBtn = typeinfo_cast<CCMenuItemSpriteExtra*>(layer->getChildByIDRecursive("settings-button"));

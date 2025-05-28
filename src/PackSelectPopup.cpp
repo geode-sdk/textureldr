@@ -40,7 +40,10 @@ bool PackSelectPopup::init() {
     if (!Popup<>::initAnchored(440.f, 290.f, "GJ_square01.png")) return false;
 
     GameManager::get()->fadeInMenuMusic();
-    
+
+    // just incase
+    Mod::get()->setSavedValue("shown-moved-alert", true);
+
     this->setID("PackSelectPopup");
 
     this->setKeypadEnabled(true);

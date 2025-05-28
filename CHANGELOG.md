@@ -1,3 +1,6 @@
+# 1.8.1
+* Show tutorial for new button location
+
 # 1.8.0
 * Redesign the entire pack selection UI, courtesy of @Alphalaneous
   * Thanks alphalaneous!

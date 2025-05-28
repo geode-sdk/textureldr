@@ -5,6 +5,7 @@
 #include <Geode/modify/OptionsLayer.hpp>
 #include <Geode/modify/IDManager.hpp>
 #include <Geode/ui/BasedButtonSprite.hpp>
+#include "Tutorial.hpp"
 
 using namespace geode::prelude;
 
@@ -19,9 +20,14 @@ class $modify(MyOptionsLayer, OptionsLayer) {
         if (CCNode* optionsMenu = m_mainLayer->getChildByID("options-menu")) {
             if (optionsMenu->getChildByID("graphics-button")) return;
 
-            ButtonSprite* buttonSprite = ButtonSprite::create("Textures", 130, true, "goldFont.fnt", "GJ_button_01.png", 32, 1);
+            auto* buttonSprite = ButtonSprite::create("Textures", 130, true, "goldFont.fnt", "GJ_button_01.png", 32, 1);
 
-            CCMenuItemSpriteExtra* textureLoaderBtn = CCMenuItemSpriteExtra::create(buttonSprite, this, menu_selector(MyOptionsLayer::onTextureLdr));
+            auto* textureLoaderBtn = CCMenuItemSpriteExtra::create(
+                buttonSprite,
+                this,
+                menu_selector(MyOptionsLayer::onTextureLdr)
+            );
+            textureLoaderBtn->setID("texture-loader-button"_spr);
 
             if (CCNode* optionsButton = optionsMenu->getChildByID("options-button")) {
                 optionsMenu->insertAfter(textureLoaderBtn, optionsButton);
@@ -42,12 +48,16 @@ class $modify(MyVideoOptionsLayer, VideoOptionsLayer) {
         if (!VideoOptionsLayer::init()) return false;
 
         for (CCNode* child : CCArrayExt<CCNode*>(m_buttonMenu->getChildren())) {
-            if (CCMenuItemSpriteExtra* btn = typeinfo_cast<CCMenuItemSpriteExtra*>(child)) {
-                if (ButtonSprite* btnSpr = btn->getChildByType<ButtonSprite*>(0)) {
+            if (auto* btn = typeinfo_cast<CCMenuItemSpriteExtra*>(child)) {
+                if (auto* btnSpr = btn->getChildByType<ButtonSprite*>(0)) {
                     if (std::string_view(btnSpr->m_label->getString()) == "Advanced") {
-                        ButtonSprite* buttonSprite = ButtonSprite::create("Textures", 60, true, "goldFont.fnt", "GJ_button_04.png", 25, 0.5f);
+                        auto* buttonSprite = ButtonSprite::create("Textures", 60, true, "goldFont.fnt", "GJ_button_04.png", 25, 0.5f);
 
-                        CCMenuItemSpriteExtra* textureLoaderBtn = CCMenuItemSpriteExtra::create(buttonSprite, this, menu_selector(MyVideoOptionsLayer::onTextureLdr));
+                        auto* textureLoaderBtn = CCMenuItemSpriteExtra::create(
+                            buttonSprite,
+                            this,
+                            menu_selector(MyVideoOptionsLayer::onTextureLdr)
+                        );
                         textureLoaderBtn->setID("texture-loader-button"_spr);
 
                         textureLoaderBtn->setPositionX(btn->getPositionX());
@@ -89,20 +99,30 @@ class $modify(MyMenuLayer, MenuLayer) {
     }
 
     void onTextureLdr(CCObject*) {
-        bool isDesktop = false;
-        #ifdef GEODE_IS_DESKTOP
-        isDesktop = true;
-        #endif
         // Prompt where the button is relocated, since many mobile users use the high graphics mod, we want to direct them to the right place still.
-        if (isDesktop || Loader::get()->isModLoaded("weebify.high-graphics-android")) {
-            createQuickPopup("Woah!", "Texture Loader has been moved into <cb>Graphics Settings</c>, go to graphics settings and click the <cg>Textures</c> button to manage your Texture Packs!", "I UNDERSTAND", nullptr, [] (FLAlertLayer*, bool selected) {
-                Mod::get()->setSavedValue("shown-moved-alert", true);
-            }, true);
+        if (GEODE_DESKTOP(true ||) Loader::get()->isModLoaded("weebify.high-graphics-android")) {
+            createQuickPopup(
+                "Woah!",
+                "Texture Loader has been moved into <cb>Graphics Settings</c>, go to graphics settings and click the <cg>Textures</c> button to manage your Texture Packs!", 
+                "Show me",
+                nullptr,
+                [](auto, auto) {
+                    Mod::get()->setSavedValue("shown-moved-alert", true);
+                    playNewLocationTutorial();
+                }
+            );
         }
         else {
-            createQuickPopup("Woah!", "Texture Loader has been moved into <cb>Settings</c>, go to settings and click the <cg>Textures</c> button to manage your Texture Packs!", "I UNDERSTAND", nullptr, [] (FLAlertLayer*, bool selected) {
-                Mod::get()->setSavedValue("shown-moved-alert", true);
-            }, true);
+            createQuickPopup(
+                "Woah!",
+                "Texture Loader has been moved into <cb>Settings</c>, go to settings and click the <cg>Textures</c> button to manage your Texture Packs!",
+                "Show me",
+                nullptr,
+                [](auto, auto) {
+                    Mod::get()->setSavedValue("shown-moved-alert", true);
+                    playNewLocationTutorial();
+                }
+            );
         }
     }
 };

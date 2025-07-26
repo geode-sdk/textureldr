@@ -1,3 +1,6 @@
+# 1.8.2
+* Simple rebuild for iOS JIT-less support
+
 # 1.8.1
 * Show tutorial for new button location
 

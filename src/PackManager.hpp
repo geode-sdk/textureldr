@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Pack.hpp"
-#include <unordered_map>
 #include <Geode/utils/cocos.hpp>
 
 enum class PackListType {

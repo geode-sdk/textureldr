@@ -1,7 +1,6 @@
 #include "PackNode.hpp"
 #include <Geode/binding/CCMenuItemToggler.hpp>
 #include <Geode/ui/LazySprite.hpp>
-#include "PackManager.hpp"
 #include "PackSelectPopup.hpp"
 #include "PackInfoPopup.hpp"
 #include "DragThingy.hpp"
@@ -125,10 +124,10 @@ bool PackNode::init(
 
     this->addChild(dragHandle);
 
-    m_draggingBg = CCScale9Sprite::create(
+    m_draggingBg = NineSlice::create(
         "square02b_001.png"
     );
-    m_draggingBg->setCapInsets({10, 10, 50, 50});
+    m_draggingBg->setInsets({10, 10, 10, 10});
     m_draggingBg->setColor({ 0, 0, 0 });
     m_draggingBg->setOpacity(90);
     m_draggingBg->setContentSize(this->getContentSize());
@@ -152,11 +151,11 @@ PackNode* PackNode::create(
     const std::shared_ptr<Pack>& pack,
     float width
 ) {
-    auto ret = new PackNode;
+    auto ret = new PackNode();
     if (ret->init(layer, pack, width)) {
         ret->autorelease();
         return ret;
     }
-    CC_SAFE_DELETE(ret);
+    delete ret;
     return nullptr;
 }

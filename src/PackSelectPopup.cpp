@@ -105,7 +105,7 @@ bool PackSelectPopup::init() {
     availableTitle->setID("available-text");
     m_mainLayer->addChild(availableTitle);
 
-    auto availableListBG = CCScale9Sprite::create(
+    auto availableListBG = NineSlice::create(
         "square02b_001.png", { 0, 0, 80, 80 }
     );
     availableListBG->setColor({ 0, 0, 0 });
@@ -139,7 +139,7 @@ bool PackSelectPopup::init() {
     appliedTitle->setID("applied-text");
     m_mainLayer->addChild(appliedTitle);
 
-    auto appliedListBG = CCScale9Sprite::create(
+    auto appliedListBG = NineSlice::create(
         "square02b_001.png", { 0, 0, 80, 80 }
     );
     appliedListBG->setColor({ 0, 0, 0 });
@@ -389,6 +389,6 @@ PackSelectPopup* PackSelectPopup::create() {
         ret->autorelease();
         return ret;
     }
-    CC_SAFE_DELETE(ret);
+    delete ret;
     return nullptr;
 }

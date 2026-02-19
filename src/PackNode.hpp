@@ -2,7 +2,6 @@
 
 #include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include "Pack.hpp"
-#include <functional>
 
 using namespace geode::prelude;
 
@@ -12,7 +11,7 @@ class PackNode : public CCNode {
 protected:
     PackSelectPopup* m_layer;
     std::shared_ptr<Pack> m_pack;
-    CCScale9Sprite* m_draggingBg;
+    NineSlice* m_draggingBg;
 
     bool init(
         PackSelectPopup* layer,

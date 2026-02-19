@@ -6,16 +6,16 @@ using namespace geode::prelude;
 
 class DragThingy : public CCLayer {
 protected:
-    std::function<void()> m_onClick;
-    std::function<void(CCPoint)> m_onMove;
-    std::function<void()> m_onRelease;
+    Function<void()> m_onClick;
+    Function<void(CCPoint)> m_onMove;
+    Function<void()> m_onRelease;
 
-    bool init(std::function<void()> onClick, std::function<void(CCPoint)> onMove, std::function<void()> onRelease);
+    bool init(Function<void()> onClick, Function<void(CCPoint)> onMove, Function<void()> onRelease);
     
     bool ccTouchBegan(CCTouch* touch, CCEvent*) override;
     void ccTouchMoved(CCTouch* touch, CCEvent*) override;
     void ccTouchEnded(CCTouch* touch, CCEvent*) override;
 
 public:
-    static DragThingy* create(std::function<void()> onClick, std::function<void(CCPoint)> onMove, std::function<void()> onRelease);
+    static DragThingy* create(Function<void()> onClick, Function<void(CCPoint)> onMove, Function<void()> onRelease);
 };

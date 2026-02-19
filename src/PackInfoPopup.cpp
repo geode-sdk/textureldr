@@ -6,8 +6,9 @@
 class WackyBypassFont : public CCLabelBMFont {
 protected:
     void setFntFile(std::filesystem::path fnt) {
-        auto conf = FNTConfigLoadFile(fnt.string().c_str());
-        m_sFntFile = fnt.string();
+        auto fntString = string::pathToString(fnt);
+        auto conf = FNTConfigLoadFile(fntString.c_str());
+        m_sFntFile = fntString;
         if (!conf) {
             log::error("!conf ?????");
             return;
@@ -16,7 +17,7 @@ protected:
         if (m_pConfiguration)
             m_pConfiguration->release();
         m_pConfiguration = conf;
-        conf->m_sAtlasName = fnt.replace_extension("png").string();
+        conf->m_sAtlasName = string::pathToString(fnt.replace_extension("png"));
 
         this->setTexture(
             CCTextureCache::sharedTextureCache()->addImage(conf->getAtlasName(), false)
@@ -52,7 +53,7 @@ std::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
 
     auto fname = std::filesystem::path(filename);
     fname.replace_filename(
-        fname.stem().string() + suffix + fname.extension().string()
+        string::pathToString(fname.stem()) + suffix + string::pathToString(fname.extension())
     );
 
     if (std::filesystem::exists(m_pack->getResourcesPath() / fname)) {
@@ -62,8 +63,10 @@ std::filesystem::path PackInfoPopup::getPathInPack(const char* filename) const {
     }
 }
 
-bool PackInfoPopup::init() {
-    if (!Popup::init(320.f, 200.f, this->getPathInPack("GJ_square01.png").string().c_str())) return false;
+bool PackInfoPopup::init(const std::shared_ptr<Pack>& pack) {
+    if (!Popup::init(320.f, 200.f, string::pathToString(this->getPathInPack("GJ_square01.png")).c_str())) return false;
+
+    m_pack = pack;
 
     auto title = WackyBypassFont::create(
         m_pack->getDisplayName().c_str(),
@@ -96,8 +99,8 @@ bool PackInfoPopup::init() {
     auto defaultBtnSize =
         defaultBtnLabel->getScaledContentSize() + CCSize { 20.f, 15.f };
 
-    auto defaultBtnSpr = CCScale9Sprite::create(
-        this->getPathInPack("GJ_button_01.png").string().c_str(),
+    auto defaultBtnSpr = NineSlice::create(
+        string::pathToString(this->getPathInPack("GJ_button_01.png")),
         { 0, 0, 40, 40 }
     );
     defaultBtnSpr->setContentSize(defaultBtnSize);
@@ -123,8 +126,8 @@ bool PackInfoPopup::init() {
     auto altBtnSize =
         altBtnLabel->getScaledContentSize() + CCSize { 20.f, 15.f };
 
-    auto altBtnSpr = CCScale9Sprite::create(
-        this->getPathInPack("GJ_button_02.png").string().c_str(),
+    auto altBtnSpr = NineSlice::create(
+        string::pathToString(this->getPathInPack("GJ_button_02.png")),
         { 0, 0, 40, 40 }
     );
     altBtnSpr->setContentSize(altBtnSize);
@@ -144,8 +147,7 @@ bool PackInfoPopup::init() {
 
 PackInfoPopup* PackInfoPopup::create(const std::shared_ptr<Pack>& pack) {
     auto ret = new PackInfoPopup;
-    ret->m_pack = pack;
-    if (ret->init()) {
+    if (ret->init(pack)) {
         ret->autorelease();
         return ret;
     }

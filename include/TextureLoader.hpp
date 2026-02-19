@@ -35,3 +35,5 @@ inline std::vector<Pack> getAvailablePacks() GEODE_EVENT_EXPORT_NORES(&getAvaila
 inline std::vector<Pack> getAppliedPacks() GEODE_EVENT_EXPORT_NORES(&getAppliedPacks, ());
 
 }
+
+#undef MY_MOD_ID

@@ -50,13 +50,13 @@ std::filesystem::path Pack::getResourcesPath() const {
 std::string Pack::getID() const {
     return m_info.has_value() ? 
         m_info.value().m_id :
-        m_path.filename().string();
+        string::pathToString(m_path.filename());
 }
 
 std::string Pack::getDisplayName() const {
     return m_info.has_value() ?
         m_info.value().m_name :
-        m_path.filename().string();
+        string::pathToString(m_path.filename());
 }
 
 std::optional<PackInfo> Pack::getInfo() const {
@@ -66,7 +66,7 @@ std::optional<PackInfo> Pack::getInfo() const {
 Result<> Pack::apply() {
     CCFileUtils::get()->addTexturePack(CCTexturePack {
         .m_id = this->getID(),
-        .m_paths = { this->getResourcesPath().string() }
+        .m_paths = { string::pathToString(this->getResourcesPath()) }
     });
     return Ok();
 }
@@ -105,7 +105,7 @@ Result<> Pack::extract() {
     // this method is only for zips and stuff
     if (std::filesystem::is_directory(m_path)) return Ok();
 
-    auto const fileExt = m_path.extension().string();
+    auto const fileExt = string::pathToString(m_path.extension());
     // TODO: we dont support rar, lol
     if (fileExt != ".zip" && fileExt != ".apk") {
         return Err("Expected zip or apk");
@@ -153,7 +153,7 @@ Result<> Pack::extract() {
 std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::path targetPath) {
     // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
 
-    if (m_path.extension().string() == ".apk") {
+    if (string::pathToString(m_path.extension()) == ".apk") {
         // resources can only be in one place! very easy
         return m_unzippedPath / "assets";
     }
@@ -183,8 +183,8 @@ std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::pa
         if (!file.is_regular_file()) continue;
 
         auto const path = file.path();
-        auto const name = path.stem().string();
-        auto const ext = path.extension().string();
+        auto const name = string::pathToString(path.stem());
+        auto const ext = string::pathToString(path.extension());
 
         if (ext == ".plist") {
             return targetPath;
@@ -219,14 +219,6 @@ Pack::~Pack() {
 }
 
 Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
-    #ifdef GEODE_IS_WINDOWS
-    try {
-        (void) dir.filename().string();
-    } catch(const std::exception& e) {
-        return Err("Invalid path");
-    }
-    #endif
-
     if (!std::filesystem::exists(dir)) {
         return Err("Path does not exist");
     }

@@ -2,7 +2,7 @@
 
 #include <utility>
 
-bool DragThingy::init(std::function<void()> onClick, std::function<void(CCPoint)> onMove, std::function<void()> onRelease) {
+bool DragThingy::init(Function<void()> onClick, Function<void(CCPoint)> onMove, Function<void()> onRelease) {
     if (!CCLayer::init()) return false;
 
     m_onClick = std::move(onClick);
@@ -38,12 +38,12 @@ void DragThingy::ccTouchEnded(CCTouch* touch, CCEvent*) {
         m_onRelease();
 }
 
-DragThingy* DragThingy::create(std::function<void()> onClick, std::function<void(CCPoint)> onMove, std::function<void()> onRelease) {
-    auto ret = new DragThingy;
+DragThingy* DragThingy::create(Function<void()> onClick, Function<void(CCPoint)> onMove, Function<void()> onRelease) {
+    auto ret = new DragThingy();
     if (ret->init(std::move(onClick), std::move(onMove), std::move(onRelease))) {
         ret->autorelease();
         return ret;
     }
-    CC_SAFE_DELETE(ret);
+    delete ret;
     return nullptr;
 }

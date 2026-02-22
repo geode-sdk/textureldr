@@ -1,3 +1,6 @@
+# 1.9.0
+* Geode v5 support
+
 # 1.8.2
 * Simple rebuild for iOS JIT-less support
 

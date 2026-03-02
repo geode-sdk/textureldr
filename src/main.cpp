@@ -1,14 +1,9 @@
 #include "PackSelectPopup.hpp"
 
-#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/binding/FMODAudioEngine.hpp>
-#include <Geode/modify/FMODAudioEngine.hpp>
-#include <Geode/modify/IDManager.hpp>
 #include <Geode/modify/LoadingLayer.hpp>
-#include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/OptionsLayer.hpp>
 #include <Geode/modify/VideoOptionsLayer.hpp>
-#include <Geode/ui/BasedButtonSprite.hpp>
 
 using namespace geode::prelude;
 

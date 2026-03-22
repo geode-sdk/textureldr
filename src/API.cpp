@@ -2,6 +2,7 @@
 #include "../include/TextureLoader.hpp"
 
 #include "PackManager.hpp"
+#include "PackSelectPopup.hpp"
 
 using namespace geode;
 
@@ -27,4 +28,8 @@ std::vector<api::Pack> api::getAvailablePacks() {
 }
 std::vector<api::Pack> api::getAppliedPacks() {
     return utils::ranges::map<std::vector<api::Pack>>(PackManager::get()->getAppliedPacks(), convertPack);
+}
+
+void api::openPopup() {
+    PackSelectPopup::create()->show();
 }

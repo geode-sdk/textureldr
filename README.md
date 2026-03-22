@@ -44,3 +44,5 @@ You can easily change it in your texture pack by doing this: \
 ![image](https://github.com/geode-sdk/textureldr/assets/26722564/776b9e06-555a-49e9-8b99-10d93338831b) \
 ![image](https://github.com/geode-sdk/textureldr/assets/26722564/fa58a2bf-1406-49a5-9e5e-9c1c111e324d) \
 
+## Spritesheet Stacking
+Texture Loader includes a feature that loads missing textures from spritesheets below. This means that texture pack creators can only include modified sprites in their respective spritesheets and the rest will be loaded from other packs the user has selected or the vanilla game resources.

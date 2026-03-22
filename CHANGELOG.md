@@ -1,7 +1,7 @@
 # 1.10.0
 * Fix reloading SFX effect files when applying
 * Remove fallback sprites (they are in Geode now)
-* Add Plist stacking (thanks @Cosmella-v)
+* Add spritesheet stacking (thanks @Cosmella-v)
 
 This means texture pack creators can now only include changed sprites in their respective spritesheets and the rest will be loaded from the packs underneath. It is also convenient for people using outdated packs, as missing textures will be loaded from GD directly.
 

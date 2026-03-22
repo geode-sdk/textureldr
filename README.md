@@ -46,3 +46,5 @@ You can easily change it in your texture pack by doing this: \
 
 ## Spritesheet Stacking
 Texture Loader includes a feature that loads missing textures from spritesheets below. This means that texture pack creators can only include modified sprites in their respective spritesheets and the rest will be loaded from other packs the user has selected or the vanilla game resources.
+
+This feature currently does not support batch nodes. This means that it cannot be used for things like level objects and texture packs still have to ship the entire spritesheets for those.

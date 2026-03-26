@@ -207,11 +207,12 @@ class $modify(RewrittenSpriteFrames, CCSpriteFrameCache) {
 		if (fileUtils->isAbsolutePath(plist)) { // Absolute path, Do not mess with!
 			return CCSpriteFrameCache::addSpriteFramesWithFile(plist);
 		}
-		std::string plistStr = getPlistForQuality(plist, CCDirector::get()->getLoadedTextureQuality());
-
+		
 		// already preloaded
-		if (!m_pLoadedFileNames->insert(plistStr).second)
+		if (!m_pLoadedFileNames->insert(plist).second)
 			return;
+
+		std::string plistStr = getPlistForQuality(plist, CCDirector::get()->getLoadedTextureQuality());
 
 		for (const auto &dir : fileUtils->getSearchPaths()) {
 			std::string fullPath = joinPath(dir, plistStr);

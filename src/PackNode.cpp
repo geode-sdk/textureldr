@@ -24,6 +24,7 @@ bool PackNode::init(
 
     m_pack = pack;
     m_layer = layer;
+    auto Canload = m_pack->canLoad();
 
     this->setID("PackNode");
 
@@ -70,21 +71,44 @@ bool PackNode::init(
     nameButton->setContentWidth(nameLabel->getScaledContentWidth());
     nameButton->setEnabled(false);
     menu->addChild(nameButton);
-
-    auto applyArrowSpr = CCSprite::create("dragIcon.png"_spr);
-    applyArrowSpr->setScale(.6f);
-
-    DragThingy* dragHandle = DragThingy::create(
-        [=, this] {
-            m_draggingBg->setVisible(true);
-            m_layer->startDragging(this);
-        },
-        [=, this] (const CCPoint& offset) { m_layer->moveDrag(offset); },
-        [=, this] {
-            m_draggingBg->setVisible(false);
-            m_layer->stopDrag();
-        }
-    );
+    if (Canload.isOk()) {
+        DragThingy* dragHandle = DragThingy::create(
+            [=, this] {
+                m_draggingBg->setVisible(true);
+                m_layer->startDragging(this);
+            },
+            [=, this] (const CCPoint& offset) { m_layer->moveDrag(offset); },
+            [=, this] {
+                m_draggingBg->setVisible(false);
+                m_layer->stopDrag();
+            }
+        );
+        auto applyArrowSpr = CCSprite::create("dragIcon.png"_spr);
+        applyArrowSpr->setScale(.6f);
+        applyArrowSpr->setAnchorPoint(ccp(0, 0));
+        dragHandle->addChild(applyArrowSpr);
+        dragHandle->setContentSize(applyArrowSpr->getScaledContentSize());
+        dragHandle->setID("apply-pack-button");
+        dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
+        dragHandle->setTouchPriority(-130);
+        this->addChild(dragHandle);
+    } else {
+        log::debug("cannot apply forced");
+        auto errorIcon = CCSprite::createWithSpriteFrameName("geode.loader/info-warning.png");
+        errorIcon->setScale(.8f);
+        errorIcon->setAnchorPoint(ccp(0, 0));
+        std::string error = Canload.isErr() ? Canload.unwrapErr() : "unknown error";
+        auto errorButton = CCMenuItemExt::createSpriteExtra(errorIcon, [error](auto btn){
+            MDPopup::create(
+                "Failed to load",
+                error,
+                "OK"
+            )->show();
+        });
+        errorButton->setID("error-pack-info-button");
+        errorButton->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
+        menu->addChild(errorButton);
+    }
 
     if (!m_pack->getInfo().has_value()) {
         nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight()/2});
@@ -115,14 +139,6 @@ bool PackNode::init(
         nameButton->setPosition({40 + nameButton->getContentWidth()/2, this->getContentHeight() - 9.5f});
     }
 
-    applyArrowSpr->setAnchorPoint(ccp(0, 0));
-    dragHandle->addChild(applyArrowSpr);
-    dragHandle->setContentSize(applyArrowSpr->getScaledContentSize());
-    dragHandle->setID("apply-pack-button");
-    dragHandle->setPosition(width - MOVE_OFFSET, HEIGHT / 2.f);
-    dragHandle->setTouchPriority(-130);
-
-    this->addChild(dragHandle);
 
     m_draggingBg = NineSlice::create(
         "square02b_001.png"

@@ -16,6 +16,8 @@ protected:
     ScrollLayer* m_appliedList = nullptr;
     CCLabelBMFont* m_infoLabel = nullptr;
     PackNode* m_draggingNode = nullptr;
+    bool m_showerrors = false;
+    CCMenuItemToggler* m_errortoggler = nullptr;
     size_t m_lastDragIdx = size_t(-1);
     PackListType m_dragListFrom, m_dragListTo;
 

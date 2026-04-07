@@ -37,22 +37,22 @@ Result<> Pack::canLoad() {
 
 					switch (var.m_version.getComparison()) {
 					case VersionCompare::Less:
-						op = "<";
-						break;
-					case VersionCompare::More:
 						op = ">";
 						break;
+					case VersionCompare::More:
+						op = "<";
+						break;
 					case VersionCompare::LessEq:
-						op = "<=";
+						op = ">";
 						break;
 					case VersionCompare::MoreEq:
-						op = ">=";
+						op = "<";
 						break;
 					case VersionCompare::Exact:
-						op = "==";
+						op = "!=";
 						break;
 					case VersionCompare::Any:
-						op = "*";
+						op = "*=";
 						break;
 					}
 

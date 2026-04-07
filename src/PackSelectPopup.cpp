@@ -206,6 +206,7 @@ void PackSelectPopup::updateList(
         if (m_errortoggler) {
             m_errortoggler->setVisible(false);
             m_showerrors = false;
+            m_errortoggler->toggle(m_showerrors);
         }
     } else {
         if (m_errortoggler) m_errortoggler->setVisible(true);
@@ -257,13 +258,17 @@ void PackSelectPopup::onReloadPacks(CCObject*) {
 std::pair<PackListType, size_t> PackSelectPopup::getPackListTypeAndIndex(const std::shared_ptr<Pack>& pack) {
     auto manager = PackManager::get();
     const auto& applied = manager->getAppliedPacks();
+    const auto& locked = manager->getFailedPacks();
     const auto& available = manager->getAvailablePacks();
 
     auto it = std::find(applied.begin(), applied.end(), pack);
     if (it != applied.end()) {
         return { PackListType::Applied, static_cast<size_t>(std::distance(applied.begin(), it)) };
     }
-
+    it = std::find(locked.begin(), locked.end(), pack);
+    if (it != locked.end()) {
+        return { PackListType::Blocked, static_cast<size_t>(std::distance(locked.begin(), it)) };
+    }
     it = std::find(available.begin(), available.end(), pack);
     return { PackListType::Available, static_cast<size_t>(std::distance(available.begin(), it)) };
 }

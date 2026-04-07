@@ -12,50 +12,84 @@ Result<> Pack::canLoad() {
 		return Err("Pack targets a <cr>newer version</c> of <cy>Texture Loader</c> (<cp>{}</c>)", info.m_textureldr);
 	};
 	std::string realError = "";
-    auto* loader = Loader::get();
+	auto *loader = Loader::get();
 
-    for (const auto& var : info.m_mods) {
-        if (var.m_required) {
-            auto mod = loader->getLoadedMod(var.m_id);
-            if (var.m_incompatible) {
-                if (mod) {
-                     if (!var.m_version.compare(mod->getVersion())) {
-                        continue;
-                    }
-                    realError += fmt::format("Mod <cy>{}</c> is <cr>Installed</c>\n",var.m_id);
-                }
-            }
-             else {
-                if (mod) {
-                    auto version = mod->getVersion();
-                    auto resonned = var.m_version.compareWithReason(version);
-                    if (resonned == VersionCompareResult::Match) {
-                        continue;
-                    }
-                    const char* reason = "version mismatch";
+	for (const auto &var : info.m_mods) {
+		if (var.m_required) {
+			auto mod = loader->getLoadedMod(var.m_id);
+			if (var.m_incompatible) {
+				if (mod) {
+					if (!var.m_version.compare(mod->getVersion())) {
+						continue;
+					}
+					realError += fmt::format("Mod <cy>{}</c> is <cr>Installed</c>\n", var.m_id);
+				}
+			} else {
+				if (mod) {
+					auto version = mod->getVersion();
+					auto resonned = var.m_version.compareWithReason(version);
+					if (resonned == VersionCompareResult::Match) {
+						continue;
+					}
 
-                    switch (resonned) {
-                        case VersionCompareResult::TooOld:
-                            realError += fmt::format("Current version of the mod <cy>{}</c> is <cr>older</c> than the version provided (<cp>{}</c> <cr><</c> <cp>{}</c>)\n",var.m_id, version, var.m_version.getUnderlyingVersion());
-                            break;
-                        case VersionCompareResult::TooNew:
-                            realError += fmt::format("Current version of the mod <cy>{}</c> is <cr>newer</c> than the version provided (<cp>{}</c> <cr>></c> <cp>{}</c>)\n",var.m_id, version, var.m_version.getUnderlyingVersion());
-                            break;
-                        case VersionCompareResult::MajorMismatch:
-                            realError += fmt::format("Current version of the mod <cy>{}</c> has an <cr>incompatible major</c> version with the version provided (<cp>{}</c> <cr>!=</c> <cp>{}</c>)\n",var.m_id, version.getMajor(), var.m_version.getUnderlyingVersion().getMajor());
-                            break;
-                        default:
-                            realError += fmt::format("Current version of the mod <cy>{}</c> <cr>version mismatch</c> (<cp>{} {}/c>)\n",var.m_id, version, var.m_version);
-                            break;
-                    }
-                } else {
-                    realError += fmt::format("Mod {}({}) is not installed\n",var.m_id, var.m_version.getUnderlyingVersion());
-                }
-            }
-        }
-    }
-    if (realError.empty()) return Ok();
-    return Err(realError);
+					const char *detail = "version mismatch";
+					const char *op = "?";
+
+					switch (var.m_version.getComparison()) {
+					case VersionCompare::Less:
+						op = "<";
+						break;
+					case VersionCompare::More:
+						op = ">";
+						break;
+					case VersionCompare::LessEq:
+						op = "<=";
+						break;
+					case VersionCompare::MoreEq:
+						op = ">=";
+						break;
+					case VersionCompare::Exact:
+						op = "==";
+						break;
+					case VersionCompare::Any:
+						op = "*";
+						break;
+					}
+
+					switch (resonned) {
+					case VersionCompareResult::TooOld:
+						detail = "older";
+						break;
+
+					case VersionCompareResult::TooNew:
+						detail = "newer";
+						break;
+
+					case VersionCompareResult::MajorMismatch:
+						detail = "majorly incompatible";
+						op = "!=";
+						break;
+
+					default:
+						break;
+					}
+
+					realError += fmt::format(
+					    "Current version of the mod <cy>{}</c> is <cr>{}</c> than the version provided (<cp>{}</c> <cr>{}</c> <cp>{}</c>)\n",
+					    var.m_id,
+					    detail,
+					    version,
+					    op,
+					    var.m_version.getUnderlyingVersion());
+				} else {
+					realError += fmt::format("Mod {}({}) is not installed\n", var.m_id, var.m_version.getUnderlyingVersion());
+				}
+			}
+		}
+	}
+	if (realError.empty())
+		return Ok();
+	return Err(realError);
 }
 Result<PackInfo> PackInfo::from(matjson::Value const &json) {
 	auto info = PackInfo();
@@ -92,20 +126,20 @@ Result<PackInfo> PackInfo::from(matjson::Value const &json) {
 	if (auto loadif = root.has("load-if")) {
 		auto loadifVal = loadif.get<matjson::Value>("load-if"); // i couldn't get unwrapordefault working??
 		if (loadifVal.isObject() || loadifVal.isArray()) {
-				for (auto const &[ModID, Json] : loadifVal) {
-					auto modinfo = ModInfo();
-					modinfo.m_id = ModID;
-					if (Json.contains("incompatible")) {
-						modinfo.m_incompatible = Json["incompatible"].asBool().unwrapOrDefault();
-					};
-					if (Json.contains("require")) {
-						modinfo.m_required = Json["require"].asBool().unwrapOrDefault();
-					};
-					if (Json.contains("version")) {
-						modinfo.m_version = Json["version"].as<ComparableVersionInfo>().unwrapOrDefault();
-					};
-					info.m_mods.push_back(modinfo);
-				}
+			for (auto const &[ModID, Json] : loadifVal) {
+				auto modinfo = ModInfo();
+				modinfo.m_id = ModID;
+				if (Json.contains("incompatible")) {
+					modinfo.m_incompatible = Json["incompatible"].asBool().unwrapOrDefault();
+				};
+				if (Json.contains("require")) {
+					modinfo.m_required = Json["require"].asBool().unwrapOrDefault();
+				};
+				if (Json.contains("version")) {
+					modinfo.m_version = Json["version"].as<ComparableVersionInfo>().unwrapOrDefault();
+				};
+				info.m_mods.push_back(modinfo);
+			}
 		} else {
 			return Err("Pack load-if isn't a object list");
 		}

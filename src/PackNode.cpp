@@ -93,7 +93,6 @@ bool PackNode::init(
         dragHandle->setTouchPriority(-130);
         this->addChild(dragHandle);
     } else {
-        log::debug("cannot apply forced");
         auto errorIcon = CCSprite::createWithSpriteFrameName("geode.loader/info-warning.png");
         errorIcon->setScale(.8f);
         errorIcon->setAnchorPoint(ccp(0, 0));

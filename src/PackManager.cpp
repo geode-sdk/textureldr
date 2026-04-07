@@ -28,26 +28,36 @@ std::vector<std::shared_ptr<Pack>> PackManager::getFailedPacks() const {
 }
 
 void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index) {
-    auto& destination =
-    to == PackListType::Applied   ? m_applied :
-    to == PackListType::Available ? m_available :
-    m_loadfailed;
+    auto& destination = to == PackListType::Applied ? m_applied :  to == PackListType::Available ? m_available : m_loadfailed;
     if (ranges::contains(destination, pack)) {
         ranges::move(destination, pack, index);
     } else {
-         auto& from =
-            to == PackListType::Applied   ? m_applied :
-            to == PackListType::Available ? m_available :
-            m_loadfailed;
-        ranges::remove(from, pack);
-        if (index < destination.size()) {
-            destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+        auto& from = to == PackListType::Applied ? m_available : to == PackListType::Available ? m_applied : m_loadfailed;
+        if (ranges::contains(from, pack)) {
+            ranges::remove(from, pack);
+            if (index < destination.size()) {
+                destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+            } else {
+                destination.push_back(pack);
+            }
         } else {
-            destination.push_back(pack);
+            // failsafe just in case it isn't there?
+            auto removeFromIfPresent = [&](auto& list) {
+                if (ranges::contains(list, pack)) {
+                    ranges::remove(list, pack);
+                    return true;
+                }
+                return false;
+            };
+            if (!removeFromIfPresent(m_applied)) if(!removeFromIfPresent(m_available)) removeFromIfPresent(m_loadfailed);
+            if (index < destination.size()) {
+                destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+            } else {
+                destination.push_back(pack);
+            }
         }
     }
 }
-
 void PackManager::savePacks() {
     Mod::get()->setSavedValue("applied", m_applied);
 }

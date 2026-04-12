@@ -1,3 +1,6 @@
+# 1.10.1
+* Fix iOS and Mac issues with the previous update
+
 # 1.10.0
 * Fix reloading SFX effect files when applying
 * Remove fallback sprites (they are in Geode now)

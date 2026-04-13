@@ -1,3 +1,9 @@
+# 1.10.2
+* Disable texture fallback logic for icons
+* Re-add support for packs that do not include .plist files
+  * Including these is still highly recommended, as it will significantly help compatibility with future versions of GD
+* Fix touch issues after applying texture packs
+
 # 1.10.1
 * Fix iOS and Mac issues with the previous update
 

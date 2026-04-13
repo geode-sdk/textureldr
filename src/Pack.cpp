@@ -1,241 +1,344 @@
 #include "Pack.hpp"
-#include <Geode/utils/JsonValidation.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
+#include <Geode/utils/JsonValidation.hpp>
 #include <Geode/utils/file.hpp>
+Result<> Pack::canLoad() {
+	if (!m_info.has_value())
+		return Ok();
+	auto info = m_info.value();
+	auto current = Mod::get()->getVersion();
+	if (info.m_textureldr > VersionInfo(current.getMajor(), current.getMinor(), 99999999)) {
+		return Err("Pack targets a <cr>newer version</c> of <cy>Texture Loader</c> (<cp>{}</c>)", info.m_textureldr);
+	};
+	std::string realError = "";
+	auto *loader = Loader::get();
 
-Result<PackInfo> PackInfo::from(matjson::Value const& json) {
-    auto info = PackInfo();
+	for (const auto &var : info.m_mods) {
+		if (var.m_required) {
+			auto mod = loader->getLoadedMod(var.m_id);
+			if (var.m_incompatible) {
+				if (mod) {
+					if (!var.m_version.compare(mod->getVersion())) {
+						continue;
+					}
+					realError += fmt::format("Mod <cy>{}</c> is <cr>Installed</c>\n", var.m_id);
+				}
+			} else {
+				if (mod) {
+					auto version = mod->getVersion();
+					auto resonned = var.m_version.compareWithReason(version);
+					if (resonned == VersionCompareResult::Match) {
+						continue;
+					}
 
-    auto copyJson = json;
-    auto root = checkJson(copyJson, "[pack.json]");
+					const char *detail = "version mismatch";
+					const char *op = "?";
 
-    auto target = root.needs("textureldr").get<VersionInfo>();
+					switch (var.m_version.getComparison()) {
+					case VersionCompare::Less:
+						op = ">";
+						break;
+					case VersionCompare::More:
+						op = "<";
+						break;
+					case VersionCompare::LessEq:
+						op = ">";
+						break;
+					case VersionCompare::MoreEq:
+						op = "<";
+						break;
+					case VersionCompare::Exact:
+						op = "!=";
+						break;
+					case VersionCompare::Any:
+						op = "*=";
+						break;
+					}
 
-    GEODE_UNWRAP(root.ok());
+					switch (resonned) {
+					case VersionCompareResult::TooOld:
+						detail = "older";
+						break;
 
-    auto current = Mod::get()->getVersion();
-    if (target > VersionInfo(current.getMajor(), current.getMinor(), 99999999)) {
-        return Err("Pack targets newer version of TextureLdr");
-    }
-    info.m_textureldr = target;
-    root.needs("name").into(info.m_name);
-    root.needs("id").into(info.m_id);
-    root.needs("version").into(info.m_version);
+					case VersionCompareResult::TooNew:
+						detail = "newer";
+						break;
 
-    // has single "author" key?
-    if (auto author = root.has("author")) {
-        std::string temp;
-        author.into(temp);
-        info.m_authors = { temp };
-    }
-    // otherwise use "authors" key
-    else {
-        root.needs("authors").into(info.m_authors);
-    }
+					case VersionCompareResult::MajorMismatch:
+						detail = "majorly incompatible";
+						op = "!=";
+						break;
 
-    GEODE_UNWRAP(root.ok());
+					default:
+						break;
+					}
 
-    return Ok(info);
+					realError += fmt::format(
+					    "Current version of the mod <cy>{}</c> is <cr>{}</c> than the version provided (<cp>{}</c> <cr>{}</c> <cp>{}</c>)\n",
+					    var.m_id,
+					    detail,
+					    version,
+					    op,
+					    var.m_version.getUnderlyingVersion());
+				} else {
+					realError += fmt::format("Mod {}({}) is not installed\n", var.m_id, var.m_version.getUnderlyingVersion());
+				}
+			}
+		}
+	}
+	if (realError.empty())
+		return Ok();
+	return Err(realError);
+}
+Result<PackInfo> PackInfo::from(matjson::Value const &json) {
+	auto info = PackInfo();
+
+	auto copyJson = json;
+	auto root = checkJson(copyJson, "[pack.json]");
+
+	auto target = root.needs("textureldr").get<VersionInfo>();
+
+	GEODE_UNWRAP(root.ok());
+	/*
+	// old way of checking
+	auto current = Mod::get()->getVersion();
+	if (target > VersionInfo(current.getMajor(), current.getMinor(), 99999999)) {
+	    return Err("Pack targets newer version of TextureLdr");
+	}
+	*/
+	info.m_textureldr = target;
+	root.needs("name").into(info.m_name);
+	root.needs("id").into(info.m_id);
+	root.needs("version").into(info.m_version);
+
+	// has single "author" key?
+	if (auto author = root.has("author")) {
+		std::string temp;
+		author.into(temp);
+		info.m_authors = {temp};
+	}
+	// otherwise use "authors" key
+	else {
+		root.needs("authors").into(info.m_authors);
+	}
+
+	if (auto loadif = root.has("load-if")) {
+		auto loadifVal = loadif.get<matjson::Value>("load-if"); // i couldn't get unwrapordefault working??
+		if (loadifVal.isObject() || loadifVal.isArray()) {
+			for (auto const &[ModID, Json] : loadifVal) {
+				auto modinfo = ModInfo();
+				modinfo.m_id = ModID;
+				if (Json.contains("incompatible")) {
+					modinfo.m_incompatible = Json["incompatible"].asBool().unwrapOrDefault();
+				};
+				if (Json.contains("require")) {
+					modinfo.m_required = Json["require"].asBool().unwrapOrDefault();
+				};
+				if (Json.contains("version")) {
+					modinfo.m_version = Json["version"].as<ComparableVersionInfo>().unwrapOrDefault();
+				};
+				info.m_mods.push_back(modinfo);
+			}
+		} else {
+			return Err("Pack load-if isn't a object list");
+		}
+	}
+
+	GEODE_UNWRAP(root.ok());
+
+	return Ok(info);
 }
 
 std::filesystem::path Pack::getOriginPath() const {
-    return m_path;
+	return m_path;
 }
 
 std::filesystem::path Pack::getResourcesPath() const {
-    return m_resourcesPath;
+	return m_resourcesPath;
 }
 
 std::string Pack::getID() const {
-    return m_info.has_value() ? 
-        m_info.value().m_id :
-        string::pathToString(m_path.filename());
+	return m_info.has_value() ? m_info.value().m_id : string::pathToString(m_path.filename());
 }
 
 std::string Pack::getDisplayName() const {
-    return m_info.has_value() ?
-        m_info.value().m_name :
-        string::pathToString(m_path.filename());
+	return m_info.has_value() ? m_info.value().m_name : string::pathToString(m_path.filename());
 }
 
 std::optional<PackInfo> Pack::getInfo() const {
-    return m_info;
+	return m_info;
 }
 
 Result<> Pack::apply() {
-    CCFileUtils::get()->addTexturePack(CCTexturePack {
-        .m_id = this->getID(),
-        .m_paths = { string::pathToString(this->getResourcesPath()) }
-    });
-    return Ok();
+	CCFileUtils::get()->addTexturePack(CCTexturePack{
+	    .m_id = this->getID(),
+	    .m_paths = {string::pathToString(this->getResourcesPath())}});
+	return Ok();
 }
 
 Result<> Pack::unapply() const {
-    CCFileUtils::get()->removeTexturePack(this->getID());
-    return Ok();
+	CCFileUtils::get()->removeTexturePack(this->getID());
+	return Ok();
 }
 
 Result<> Pack::parsePackJson() {
-    try {
-        GEODE_UNWRAP_INTO(auto json, file::readJson(m_resourcesPath / "pack.json"));
-        GEODE_UNWRAP_INTO(m_info, PackInfo::from(json));
-        return Ok();
-    } catch(std::exception& e) {
-        return Err("Unable to parse pack.json: {}", e.what());
-    }
+	GEODE_UNWRAP_INTO(auto json, file::readJson(m_resourcesPath / "pack.json"));
+	GEODE_UNWRAP_INTO(m_info, PackInfo::from(json));
+	return Ok();
 }
 
 Result<> Pack::setup() {
-    m_unzippedPath = m_path;
-    m_resourcesPath = m_path;
-    GEODE_UNWRAP(this->extract());
-    auto optPath = this->findResourcesPath(m_unzippedPath);
-    if (optPath) {
-        m_resourcesPath = *optPath;
-    }
-    // TODO: read this from the zip before extracting.. somehow
-    if (std::filesystem::exists(m_resourcesPath / "pack.json")) {
-        GEODE_UNWRAP(this->parsePackJson());
-    }
-    return Ok();
+	m_unzippedPath = m_path;
+	m_resourcesPath = m_path;
+	GEODE_UNWRAP(this->extract());
+	auto optPath = this->findResourcesPath(m_unzippedPath);
+	if (optPath) {
+		m_resourcesPath = *optPath;
+	}
+	// TODO: read this from the zip before extracting.. somehow
+	if (std::filesystem::exists(m_resourcesPath / "pack.json")) {
+		GEODE_UNWRAP(this->parsePackJson());
+	}
+	return Ok();
 }
 
 Result<> Pack::extract() {
-    // this method is only for zips and stuff
-    if (std::filesystem::is_directory(m_path)) return Ok();
+	// this method is only for zips and stuff
+	if (std::filesystem::is_directory(m_path))
+		return Ok();
 
-    auto const fileExt = string::pathToString(m_path.extension());
-    // TODO: we dont support rar, lol
-    if (fileExt != ".zip" && fileExt != ".apk") {
-        return Err("Expected zip or apk");
-    }
+	auto const fileExt = string::pathToString(m_path.extension());
+	// TODO: we dont support rar, lol
+	if (fileExt != ".zip" && fileExt != ".apk") {
+		return Err("Expected zip or apk");
+	}
 
-    auto extractPath = Mod::get()->getSaveDir() / "unzipped" / this->getID();
-    (void) utils::file::createDirectoryAll(extractPath);
+	auto extractPath = Mod::get()->getSaveDir() / "unzipped" / this->getID();
+	(void)utils::file::createDirectoryAll(extractPath);
 
-    auto datePath = extractPath / "modified-at";
-    std::string currentHash = file::readString(datePath).unwrapOr("");
+	auto datePath = extractPath / "modified-at";
+	std::string currentHash = file::readString(datePath).unwrapOr("");
 
-    std::error_code ec;
-    auto modifiedDate = std::filesystem::last_write_time(m_path, ec);
-    if (ec) {
-        return Err("Unable get last_write_time: {}", ec.message());
-    }
-    auto modifiedCount = std::chrono::duration_cast<std::chrono::milliseconds>(modifiedDate.time_since_epoch());
-    auto modifiedHash = std::to_string(modifiedCount.count());
-    if (currentHash == modifiedHash) {
-        m_unzippedPath = extractPath;
-        return Ok();
-    }
-    log::debug("Hash mismatch detected, unzipping {}", this->getID());
+	std::error_code ec;
+	auto modifiedDate = std::filesystem::last_write_time(m_path, ec);
+	if (ec) {
+		return Err("Unable get last_write_time: {}", ec.message());
+	}
+	auto modifiedCount = std::chrono::duration_cast<std::chrono::milliseconds>(modifiedDate.time_since_epoch());
+	auto modifiedHash = std::to_string(modifiedCount.count());
+	if (currentHash == modifiedHash) {
+		m_unzippedPath = extractPath;
+		return Ok();
+	}
+	log::debug("Hash mismatch detected, unzipping {}", this->getID());
 
-    std::filesystem::remove_all(extractPath, ec);
-    if (ec) {
-        return Err("Unable to delete temp dir: {}", ec.message());
-    }
+	std::filesystem::remove_all(extractPath, ec);
+	if (ec) {
+		return Err("Unable to delete temp dir: {}", ec.message());
+	}
 
-    (void) utils::file::createDirectoryAll(extractPath);
-    auto res = file::writeString(datePath, modifiedHash);
-    if (!res) {
-        log::warn("Failed to write modified date of extracted pack: {}", res.unwrapErr());
-    }
+	(void)utils::file::createDirectoryAll(extractPath);
+	auto res = file::writeString(datePath, modifiedHash);
+	if (!res) {
+		log::warn("Failed to write modified date of extracted pack: {}", res.unwrapErr());
+	}
 
-    GEODE_UNWRAP_INTO(auto unzip, file::Unzip::create(m_path));
-    GEODE_UNWRAP(unzip.extractAllTo(extractPath));
+	GEODE_UNWRAP_INTO(auto unzip, file::Unzip::create(m_path));
+	GEODE_UNWRAP(unzip.extractAllTo(extractPath));
 
-    m_unzippedPath = extractPath;
-    m_resourcesPath = extractPath;
+	m_unzippedPath = extractPath;
+	m_resourcesPath = extractPath;
 
-    return Ok();
+	return Ok();
 }
 
 std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::path targetPath) {
-    // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
+	// Packs are often distributed in weird ways, this code tries to find where the resources actually are..
 
-    if (string::pathToString(m_path.extension()) == ".apk") {
-        // resources can only be in one place! very easy
-        return m_unzippedPath / "assets";
-    }
+	if (string::pathToString(m_path.extension()) == ".apk") {
+		// resources can only be in one place! very easy
+		return m_unzippedPath / "assets";
+	}
 
-    if (std::filesystem::exists(targetPath / "pack.json") || std::filesystem::exists(targetPath / "pack.png")) {
-        // this pack is made for texture loader, so it should be correct already
-        return targetPath;
-    }
+	if (std::filesystem::exists(targetPath / "pack.json") || std::filesystem::exists(targetPath / "pack.png")) {
+		// this pack is made for texture loader, so it should be correct already
+		return targetPath;
+	}
 
-    const auto existsDir = [](auto path) {
-        return std::filesystem::exists(path) && std::filesystem::is_directory(path);
-    };
+	const auto existsDir = [](auto path) {
+		return std::filesystem::exists(path) && std::filesystem::is_directory(path);
+	};
 
-    if (existsDir(targetPath / "Resources")) {
-        // its probably there, i hope
-        return targetPath / "Resources";
-    }
+	if (existsDir(targetPath / "Resources")) {
+		// its probably there, i hope
+		return targetPath / "Resources";
+	}
 
-    // 2.2 icons folder
-    if (existsDir(targetPath / "icons")) {
-        return targetPath;
-    }
+	// 2.2 icons folder
+	if (existsDir(targetPath / "icons")) {
+		return targetPath;
+	}
 
-    // Look for any plist files, or png files ending in -uhd -hd or starting in GJ_
+	// Look for any plist files, or png files ending in -uhd -hd or starting in GJ_
 
-    for (auto const& file : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
-        if (!file.is_regular_file()) continue;
+	for (auto const &file : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
+		if (!file.is_regular_file())
+			continue;
 
-        auto const path = file.path();
-        auto const name = string::pathToString(path.stem());
-        auto const ext = string::pathToString(path.extension());
+		auto const path = file.path();
+		auto const name = string::pathToString(path.stem());
+		auto const ext = string::pathToString(path.extension());
 
-        if (ext == ".plist") {
-            return targetPath;
-        } else if (ext == ".png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd"))) {
-            return targetPath;
-        } else if (ext == ".ogg") {
-            return targetPath;
-        } else if (ext == ".mp3") {
-            return targetPath;
-        }
-    }
+		if (ext == ".plist") {
+			return targetPath;
+		} else if (ext == ".png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd"))) {
+			return targetPath;
+		} else if (ext == ".ogg") {
+			return targetPath;
+		} else if (ext == ".mp3") {
+			return targetPath;
+		}
+	}
 
-    // ok, look recursively through the folders then
-    for (auto const& dir : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
-        if (!dir.is_directory()) continue;
+	// ok, look recursively through the folders then
+	for (auto const &dir : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
+		if (!dir.is_directory())
+			continue;
 
-        auto const path = dir.path();
+		auto const path = dir.path();
 
-        // TODO: this might skip over texture packs that set geode mod textures..
-        // though, they should be using pack.json or pack.png anyways!
-        auto const opt = this->findResourcesPath(path);
-        if (opt) {
-            return *opt;
-        }
-    }
+		// TODO: this might skip over texture packs that set geode mod textures..
+		// though, they should be using pack.json or pack.png anyways!
+		auto const opt = this->findResourcesPath(path);
+		if (opt) {
+			return *opt;
+		}
+	}
 
-    return std::nullopt;
+	return std::nullopt;
 }
 
 Pack::~Pack() {
-    (void)this->unapply();
+	(void)this->unapply();
 }
 
-Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
-    if (!std::filesystem::exists(dir)) {
-        return Err("Path does not exist");
-    }
-    auto pack = std::make_shared<Pack>();
-    pack->m_path = dir;
-    GEODE_UNWRAP(pack->setup());
-    return Ok(pack);
+Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const &dir) {
+	if (!std::filesystem::exists(dir)) {
+		return Err("Path does not exist");
+	}
+	auto pack = std::make_shared<Pack>();
+	pack->m_path = dir;
+	GEODE_UNWRAP(pack->setup());
+	return Ok(pack);
 }
 
-matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::toJson(std::shared_ptr<Pack> const& pack) {
-    return matjson::makeObject({
-        { "path", pack->getOriginPath() }
-    });
+matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::toJson(std::shared_ptr<Pack> const &pack) {
+	return matjson::makeObject({{"path", pack->getOriginPath()}});
 }
 
-Result<std::shared_ptr<Pack>> matjson::Serialize<std::shared_ptr<Pack>>::fromJson(matjson::Value const& value) {
-    GEODE_UNWRAP_INTO(auto path, value["path"].as<std::filesystem::path>());
-    GEODE_UNWRAP_INTO(auto pack, Pack::from(path));
-    return Ok(pack);
+Result<std::shared_ptr<Pack>> matjson::Serialize<std::shared_ptr<Pack>>::fromJson(matjson::Value const &value) {
+	GEODE_UNWRAP_INTO(auto path, value["path"].as<std::filesystem::path>());
+	GEODE_UNWRAP_INTO(auto pack, Pack::from(path));
+	return Ok(pack);
 }

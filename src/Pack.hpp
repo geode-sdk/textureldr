@@ -9,6 +9,12 @@
 #include <matjson/stl_serialize.hpp>
 
 using namespace geode::prelude;
+struct ModInfo {
+    ComparableVersionInfo m_version; // default to all versions of the mod
+    std::string m_id;
+    bool m_incompatible;
+    bool m_required = true; // default to needing
+};
 
 struct PackInfo {
     VersionInfo m_textureldr;
@@ -16,7 +22,7 @@ struct PackInfo {
     std::string m_name;
     VersionInfo m_version;
     std::vector<std::string> m_authors;
-
+    std::vector<ModInfo> m_mods;
     static Result<PackInfo> from(matjson::Value const& json);
 };
 
@@ -45,6 +51,8 @@ public:
 
     [[nodiscard]] Result<> apply();
     [[nodiscard]] Result<> unapply() const;
+    // returns if the pack has any reasons to not load (e.g texture loader outdated), Ok() if it can load, Err(reason) if it cannot
+    [[nodiscard]] Result<> canLoad();
 
     ~Pack();
 

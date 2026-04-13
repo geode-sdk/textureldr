@@ -23,21 +23,41 @@ std::vector<std::shared_ptr<Pack>> PackManager::getAppliedPacks() const {
     return m_applied;
 }
 
+std::vector<std::shared_ptr<Pack>> PackManager::getFailedPacks() const {
+    return m_loadfailed;
+}
+
 void PackManager::movePackToIdx(const std::shared_ptr<Pack>& pack, PackListType to, size_t index) {
-    auto& destination = to == PackListType::Applied ? m_applied : m_available;
+    auto& destination = to == PackListType::Applied ? m_applied :  to == PackListType::Available ? m_available : m_loadfailed;
     if (ranges::contains(destination, pack)) {
         ranges::move(destination, pack, index);
     } else {
-        auto& from = to != PackListType::Applied ? m_applied : m_available;
-        ranges::remove(from, pack);
-        if (index < destination.size()) {
-            destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+        auto& from = to == PackListType::Applied ? m_available : to == PackListType::Available ? m_applied : m_loadfailed;
+        if (ranges::contains(from, pack)) {
+            ranges::remove(from, pack);
+            if (index < destination.size()) {
+                destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+            } else {
+                destination.push_back(pack);
+            }
         } else {
-            destination.push_back(pack);
+            // failsafe just in case it isn't there?
+            auto removeFromIfPresent = [&](auto& list) {
+                if (ranges::contains(list, pack)) {
+                    ranges::remove(list, pack);
+                    return true;
+                }
+                return false;
+            };
+            if (!removeFromIfPresent(m_applied)) if(!removeFromIfPresent(m_available)) removeFromIfPresent(m_loadfailed);
+            if (index < destination.size()) {
+                destination.insert(destination.begin() + static_cast<ptrdiff_t>(index), pack);
+            } else {
+                destination.push_back(pack);
+            }
         }
     }
 }
-
 void PackManager::savePacks() {
     Mod::get()->setSavedValue("applied", m_applied);
 }
@@ -53,6 +73,7 @@ size_t PackManager::loadPacks() {
     size_t loaded = 0;
 
     std::vector<std::shared_ptr<Pack>> found;
+    std::vector<std::shared_ptr<Pack>> failed;
 
     // Load new packs
     for (auto& dir : std::filesystem::directory_iterator(packDir)) {
@@ -60,8 +81,13 @@ size_t PackManager::loadPacks() {
         if (!packRes) {
             log::warn("Unable to load pack {}: {}", string::pathToString(dir.path()), packRes.unwrapErr());
         } else {
-            found.push_back(packRes.unwrap());
-            loaded++;
+            auto wpackRes = packRes.unwrap();
+            if (wpackRes->canLoad().isOk()){ 
+                found.push_back(wpackRes);
+                loaded++;
+            } else {
+                failed.push_back(wpackRes);
+            };
         }
     }
 
@@ -75,7 +101,8 @@ size_t PackManager::loadPacks() {
             if(auto pathRes = obj["path"].as<std::filesystem::path>()) {
                 auto res = Pack::from(pathRes.unwrap());
                 if (res) {
-                    savedApplied.push_back(res.unwrap());
+                    auto Wres = res.unwrap(); // check if it can load
+                    if (Wres->canLoad().isOk()) savedApplied.push_back(Wres);
                 }
             }
         }
@@ -96,15 +123,24 @@ size_t PackManager::loadPacks() {
 
     m_applied = newApplied;
     m_available = found;
+    m_loadfailed = failed;
 
     this->updateAppliedPacks();
 
     log::info("Loaded {} packs", loaded);
 
+    if (m_loadfailed.size() > 0) {
+       log::info("failed to load {} packs", m_loadfailed.size()); 
+    };
+
     return loaded;
 }
 
 void PackManager::updateAppliedPacks() {
+    // just in case
+    for (auto& pack : m_loadfailed) {
+        (void)pack->unapply();
+    }
     for (auto& pack : m_available) {
         (void)pack->unapply();
     }

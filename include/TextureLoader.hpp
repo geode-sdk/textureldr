@@ -33,7 +33,10 @@ struct Pack {
 
 inline std::vector<Pack> getAvailablePacks() GEODE_EVENT_EXPORT_NORES(&getAvailablePacks, ());
 inline std::vector<Pack> getAppliedPacks() GEODE_EVENT_EXPORT_NORES(&getAppliedPacks, ());
+
 inline void openPopup() GEODE_EVENT_EXPORT_NORES(&openPopup, ());
+
+inline std::vector<Pack> getFailedPacks() GEODE_EVENT_EXPORT_NORES(&getFailedPacks, ());
 
 }
 

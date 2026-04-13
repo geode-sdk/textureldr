@@ -16,14 +16,15 @@ class $modify(ReloadMenuLayer, MenuLayer) {
     static CCScene* scene(bool isVideoOptionsOpen) {
         auto scene = MenuLayer::scene(isVideoOptionsOpen);
 
+        // silly but the scene gets recreated by geode  thanks geode
+        auto layer = scene->getChildByType<CCLayer*>(0);
+
         // the robtop delay
-        if (s_openPackSelectPopup) {
+        if (s_openPackSelectPopup && layer) {
             s_openPackSelectPopup = false;
-            CCCallFunc* callback = cocos2d::CCCallFunc::create(scene, callfunc_selector(ReloadMenuLayer::doOpenOptions));
+            CCCallFunc* callback = cocos2d::CCCallFunc::create(layer, callfunc_selector(ReloadMenuLayer::doOpenOptions));
             CCDelayTime* delay = cocos2d::CCDelayTime::create(0.03f);
             CCSequence* sequence = cocos2d::CCSequence::create(delay, callback, nullptr);
-            // silly but the scene gets recreated by geode  thanks geode
-            auto* layer = scene->getChildByType<CCLayer*>(0);
             layer->runAction(sequence);
         }
         return scene;
@@ -203,6 +204,7 @@ void PackSelectPopup::onApply(CCObject*) {
         CCScene* scene = MenuLayer::scene(openVideoLayer);
         // silly but no geode util that accepts a scene directly
         auto* layer = scene->getChildByType<CCLayer*>(0);
+        layer->removeFromParentAndCleanup(false);
         return layer;
     });
 }

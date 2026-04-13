@@ -1,6 +1,7 @@
 #ifndef _IgnorePlistFix
 #include <Geode/Geode.hpp>
 #include <Geode/modify/CCSpriteFrameCache.hpp>
+#include <ranges>
 
 using namespace geode::prelude;
 // joins the dir with the file like a good file it is
@@ -193,6 +194,16 @@ std::string getPlistForQuality(const char *plist, cocos2d::TextureQuality qualit
 	return result;
 }
 
+std::string getPngForQuality(const char *plist, cocos2d::TextureQuality quality) {
+	auto result = getPlistForQuality(plist, quality);
+	size_t dot = result.find_last_of('.');
+	if (dot == std::string::npos) {
+		return result + ".png";
+	} else {
+		return result.substr(0, dot) + ".png";
+	}
+}
+
 class $modify(RewrittenSpriteFrames, CCSpriteFrameCache) {
 	static void onModify(auto &self) {
 		// "If you’re reimplementing the original function and do not call the original, use Priority::Last with setHookPriorityPre."
@@ -203,6 +214,13 @@ class $modify(RewrittenSpriteFrames, CCSpriteFrameCache) {
 	}
 
 	void addSpriteFramesWithFile(const char *plist) {
+		// TODO: probs improve on this in the future
+		// this fixes compatibility with more icons and also probs just serves as a performance optimization
+		// since we don't expect anybody to ever need icons to fall through out of all things
+		if(std::string_view(plist).starts_with("icons/")) {
+			return CCSpriteFrameCache::addSpriteFramesWithFile(plist);
+		}
+
 		auto fileUtils = CCFileUtils::sharedFileUtils();
 		if (fileUtils->isAbsolutePath(plist)) { // Absolute path, Do not mess with!
 			return CCSpriteFrameCache::addSpriteFramesWithFile(plist);
@@ -215,20 +233,36 @@ class $modify(RewrittenSpriteFrames, CCSpriteFrameCache) {
 		std::string plistStr = getPlistForQuality(plist, CCDirector::get()->getLoadedTextureQuality());
 
 		for (const auto &dir : fileUtils->getSearchPaths()) {
+			std::string texturePath;
 			std::string fullPath = joinPath(dir, plistStr);
 
-			if (!fileUtils->isFileExist(fullPath)) // does the search path find it
-				continue;
+			if (!fileUtils->isFileExist(fullPath)) { // does the search path find it
+				auto pngPath = getPngForQuality(plist, CCDirector::get()->getLoadedTextureQuality());
+				auto pngFullPath = joinPath(dir, pngPath);
+				if (!fileUtils->isFileExist(pngFullPath)) {
+					continue;
+				} else {
+					texturePath = pngPath;
+					// if the plist is not present, we assume we should use the one from the vanilla game
+					for (const auto &dir : fileUtils->getSearchPaths() | std::views::reverse) {
+						fullPath = joinPath(dir, plistStr);
+						if (fileUtils->isFileExist(fullPath)) {
+							break;
+						}
+					}
+				}
+			}
 
 			auto dict = CCDictionary::createWithContentsOfFileThreadSafe(fullPath.c_str()); // robtop method in creating plist arrays
 
 			if (!dict) // failed?
 				continue;
 
-			std::string texturePath;
 			// robtop checks if textureFileName exists... I join the dir together to make sure this search path is used
-			if (auto metadata = typeinfo_cast<CCDictionary *>(dict->objectForKey("metadata"))) {
-				texturePath = joinPath(dir, metadata->valueForKey("textureFileName")->getCString());
+			if (texturePath.empty()) {
+				if (auto metadata = typeinfo_cast<CCDictionary *>(dict->objectForKey("metadata"))) {
+					texturePath = joinPath(dir, metadata->valueForKey("textureFileName")->getCString());
+				}
 			}
 			// Doesn't contain metadata for textureFileName
 			if (texturePath.empty()) {

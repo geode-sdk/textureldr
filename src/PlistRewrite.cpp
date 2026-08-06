@@ -204,6 +204,62 @@ std::string getPngForQuality(const char *plist, cocos2d::TextureQuality quality)
 	}
 }
 
+bool doAddSpriteFramesWithFile(const char *plist, cocos2d::TextureQuality quality) {
+	auto fileUtils = CCFileUtils::sharedFileUtils();
+	std::string plistStr = getPlistForQuality(plist, quality);
+
+	bool found = false;
+
+	for (const auto &dir : fileUtils->getSearchPaths()) {
+		std::string texturePath;
+		std::string fullPath = joinPath(dir, plistStr);
+
+		if (!fileUtils->isFileExist(fullPath)) { // does the search path find it
+			auto pngPath = getPngForQuality(plist, quality);
+			auto pngFullPath = joinPath(dir, pngPath);
+			if (!fileUtils->isFileExist(pngFullPath)) {
+				continue;
+			} else {
+				texturePath = pngPath;
+				// if the plist is not present, we assume we should use the one from the vanilla game
+				for (const auto &dir : fileUtils->getSearchPaths() | std::views::reverse) {
+					fullPath = joinPath(dir, plistStr);
+					if (fileUtils->isFileExist(fullPath)) {
+						break;
+					}
+				}
+			}
+		}
+
+		auto dict = CCDictionary::createWithContentsOfFileThreadSafe(fullPath.c_str()); // robtop method in creating plist arrays
+
+		if (!dict) // failed?
+			continue;
+
+		found = true;
+
+		// robtop checks if textureFileName exists... I join the dir together to make sure this search path is used
+		if (texturePath.empty()) {
+			if (auto metadata = typeinfo_cast<CCDictionary *>(dict->objectForKey("metadata"))) {
+				texturePath = joinPath(dir, metadata->valueForKey("textureFileName")->getCString());
+			}
+		}
+		// Doesn't contain metadata for textureFileName
+		if (texturePath.empty()) {
+			texturePath = plistStr;
+			size_t pos = texturePath.find_last_of('.');
+			if (pos != std::string::npos)
+				texturePath.erase(pos);
+			texturePath += ".png";
+		}
+		// inlined version of addSpriteFramesWithDictionary as it private also makes it so it only loads the image if needed
+		addSpriteFramesWithDictionaryOnlyLoadingTextureIfNeeded(dict, texturePath);
+		dict->release();
+	}
+
+	return found;
+}
+
 class $modify(RewrittenSpriteFrames, CCSpriteFrameCache) {
 	static void onModify(auto &self) {
 		// "If you’re reimplementing the original function and do not call the original, use Priority::Last with setHookPriorityPre."
@@ -230,51 +286,12 @@ class $modify(RewrittenSpriteFrames, CCSpriteFrameCache) {
 		if (!m_pLoadedFileNames->insert(plist).second)
 			return;
 
-		std::string plistStr = getPlistForQuality(plist, CCDirector::get()->getLoadedTextureQuality());
-
-		for (const auto &dir : fileUtils->getSearchPaths()) {
-			std::string texturePath;
-			std::string fullPath = joinPath(dir, plistStr);
-
-			if (!fileUtils->isFileExist(fullPath)) { // does the search path find it
-				auto pngPath = getPngForQuality(plist, CCDirector::get()->getLoadedTextureQuality());
-				auto pngFullPath = joinPath(dir, pngPath);
-				if (!fileUtils->isFileExist(pngFullPath)) {
-					continue;
-				} else {
-					texturePath = pngPath;
-					// if the plist is not present, we assume we should use the one from the vanilla game
-					for (const auto &dir : fileUtils->getSearchPaths() | std::views::reverse) {
-						fullPath = joinPath(dir, plistStr);
-						if (fileUtils->isFileExist(fullPath)) {
-							break;
-						}
-					}
-				}
+		auto quality = CCDirector::get()->getLoadedTextureQuality();
+		while (quality >= cocos2d::TextureQuality::kTextureQualityLow) {
+			if (doAddSpriteFramesWithFile(plist, quality)) {
+				return;
 			}
-
-			auto dict = CCDictionary::createWithContentsOfFileThreadSafe(fullPath.c_str()); // robtop method in creating plist arrays
-
-			if (!dict) // failed?
-				continue;
-
-			// robtop checks if textureFileName exists... I join the dir together to make sure this search path is used
-			if (texturePath.empty()) {
-				if (auto metadata = typeinfo_cast<CCDictionary *>(dict->objectForKey("metadata"))) {
-					texturePath = joinPath(dir, metadata->valueForKey("textureFileName")->getCString());
-				}
-			}
-			// Doesn't contain metadata for textureFileName
-			if (texturePath.empty()) {
-				texturePath = plistStr;
-				size_t pos = texturePath.find_last_of('.');
-				if (pos != std::string::npos)
-					texturePath.erase(pos);
-				texturePath += ".png";
-			}
-			// inlined version of addSpriteFramesWithDictionary as it private also makes it so it only loads the image if needed
-			addSpriteFramesWithDictionaryOnlyLoadingTextureIfNeeded(dict, texturePath);
-			dict->release();
+			quality = static_cast<cocos2d::TextureQuality>(static_cast<int>(quality) - 1);
 		}
 	}
 };

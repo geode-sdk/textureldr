@@ -29,6 +29,9 @@ std::vector<api::Pack> api::getAvailablePacks() {
 std::vector<api::Pack> api::getAppliedPacks() {
     return utils::ranges::map<std::vector<api::Pack>>(PackManager::get()->getAppliedPacks(), convertPack);
 }
+std::vector<api::Pack> api::getFailedPacks() {
+    return utils::ranges::map<std::vector<api::Pack>>(PackManager::get()->getFailedPacks(), convertPack);
+}
 
 void api::openPopup() {
     PackSelectPopup::create()->show();

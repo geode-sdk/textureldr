@@ -73,6 +73,19 @@ bool PackSelectPopup::init() {
     reloadBtn->setID("reload-button");
     reloadBtn->setPosition({30, 25});
 
+    auto warninginfoON = CCSprite::createWithSpriteFrameName("geode.loader/info-warning.png");
+    warninginfoON->setScale(.7f);
+    auto warninginfoOFF = CCSprite::createWithSpriteFrameName("geode.loader/info-warning.png");
+    warninginfoOFF->setScale(.7f);
+    warninginfoOFF->setOpacity(80);
+    m_errortoggler = CCMenuItemExt::createToggler(warninginfoON, warninginfoOFF, [this](auto btn){
+        m_showerrors = !btn->isToggled();
+        PackSelectPopup::updateLists(true);
+    });
+    m_errortoggler->setID("errors-button");
+    m_errortoggler->setPosition({size.width - 60, 25});
+    m_buttonMenu->addChild(m_errortoggler);
+
     m_buttonMenu->addChild(reloadBtn);
     auto applySpr = ButtonSprite::create("Apply", "goldFont.fnt", "GJ_button_01.png", .8f);
     applySpr->setScale(0.9f);
@@ -189,11 +202,36 @@ void PackSelectPopup::updateList(
 
     int availCount = PackManager::get()->getAvailablePacks().size();
     int appliedCount = PackManager::get()->getAppliedPacks().size();
-    m_infoLabel->setString(fmt::format("Available: {}\nApplied: {}\nTotal: {}", availCount, appliedCount, availCount + appliedCount).c_str());
-}
-
+    int failedCount = PackManager::get()->getFailedPacks().size();
+    if (failedCount <= 0) {
+        if (m_errortoggler) {
+            m_errortoggler->setVisible(false);
+            m_showerrors = false;
+            m_errortoggler->toggle(m_showerrors);
+        }
+    } else {
+        if (m_errortoggler) m_errortoggler->setVisible(true);
+    }
+    m_infoLabel->setString(
+    fmt::format(
+        "Available: {}\nApplied: {}\nTotal: {}{}",
+        availCount,
+        appliedCount,
+        availCount + appliedCount,
+        failedCount > 0 ? fmt::format("\nFailed: {}", failedCount) : ""
+    ).c_str());
+};
 void PackSelectPopup::updateLists(bool resetPos) {
-    this->updateList(m_availableList, PackManager::get()->getAvailablePacks(), resetPos);
+    auto l_availablepacks = PackManager::get()->getAvailablePacks();
+    if (m_showerrors) {
+        auto l_failed = PackManager::get()->getFailedPacks(); 
+        l_availablepacks.insert(
+            l_availablepacks.end(),
+            std::make_move_iterator(l_failed.begin()),
+            std::make_move_iterator(l_failed.end())
+        );
+    }
+    this->updateList(m_availableList, l_availablepacks, resetPos);
     this->updateList(m_appliedList, PackManager::get()->getAppliedPacks(), resetPos);
 }
 
@@ -222,21 +260,28 @@ void PackSelectPopup::onReloadPacks(CCObject*) {
 std::pair<PackListType, size_t> PackSelectPopup::getPackListTypeAndIndex(const std::shared_ptr<Pack>& pack) {
     auto manager = PackManager::get();
     const auto& applied = manager->getAppliedPacks();
+    const auto& locked = manager->getFailedPacks();
     const auto& available = manager->getAvailablePacks();
 
     auto it = std::find(applied.begin(), applied.end(), pack);
     if (it != applied.end()) {
         return { PackListType::Applied, static_cast<size_t>(std::distance(applied.begin(), it)) };
     }
-
+    it = std::find(locked.begin(), locked.end(), pack);
+    if (it != locked.end()) {
+        return { PackListType::Blocked, static_cast<size_t>(std::distance(locked.begin(), it)) };
+    }
     it = std::find(available.begin(), available.end(), pack);
     return { PackListType::Available, static_cast<size_t>(std::distance(available.begin(), it)) };
 }
 void PackSelectPopup::startDragging(PackNode* node) {
+    auto pack = node->getPack();
+
+    if (pack->canLoad().isErr()) return;
     m_draggingNode = node;
 
     // set initial information, else clicking with no drag can cause it to move to available
-    auto packData = getPackListTypeAndIndex(node->getPack());
+    auto packData = getPackListTypeAndIndex(pack);
     m_dragListTo = packData.first;
     m_lastDragIdx = packData.second;
     auto const pos = node->getParent()->convertToWorldSpace(node->getPosition());
@@ -302,9 +347,19 @@ void PackSelectPopup::scrollOnDrag(PackListType type, bool up) {
 
 void PackSelectPopup::reorderDragging() {
     auto const listTypeTo = this->whereDragList();
+    auto l_availablepacks = PackManager::get()->getAvailablePacks();
+    
+    if (m_showerrors) {
+        auto l_failed = PackManager::get()->getFailedPacks(); 
+        l_availablepacks.insert(
+            l_availablepacks.end(),
+            std::make_move_iterator(l_failed.begin()),
+            std::make_move_iterator(l_failed.end())
+        );
+    }
 
     auto appliedList = std::make_pair(m_appliedList, PackManager::get()->getAppliedPacks());
-    auto availableList = std::make_pair(m_availableList, PackManager::get()->getAvailablePacks());
+    auto availableList = std::make_pair(m_availableList, l_availablepacks);
     
     auto& listTo = listTypeTo == PackListType::Applied ? appliedList : availableList;
     auto& listFrom = listTypeTo != PackListType::Applied ? appliedList : availableList;

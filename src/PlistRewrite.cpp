@@ -3,6 +3,10 @@
 #include <Geode/modify/CCSpriteFrameCache.hpp>
 #include <ranges>
 
+#if defined(GEODE_IS_IOS)
+#include "VanillaResourceResolver.hpp"
+#endif
+
 using namespace geode::prelude;
 // joins the dir with the file like a good file it is
 std::string joinPath(std::string dir, std::string file) {
@@ -211,6 +215,12 @@ bool doAddSpriteFramesWithFile(const char *plist, cocos2d::TextureQuality qualit
 	bool found = false;
 
 	for (const auto &dir : fileUtils->getSearchPaths()) {
+#if defined(GEODE_IS_IOS)
+		if (dir.empty()) {
+			continue;
+		}
+#endif
+
 		std::string texturePath;
 		std::string fullPath = joinPath(dir, plistStr);
 
@@ -256,6 +266,29 @@ bool doAddSpriteFramesWithFile(const char *plist, cocos2d::TextureQuality qualit
 		addSpriteFramesWithDictionaryOnlyLoadingTextureIfNeeded(dict, texturePath);
 		dict->release();
 	}
+
+#if defined(GEODE_IS_IOS)
+	auto vanillaPlist = resolveVanillaResource(plistStr);
+	if (!vanillaPlist.empty()) {
+		auto dict = CCDictionary::createWithContentsOfFileThreadSafe(vanillaPlist.c_str());
+		if (dict) {
+			found = true;
+
+			std::string texturePath;
+			auto slash = vanillaPlist.find_last_of('/');
+			auto vanillaDir = slash == std::string::npos ? "" : vanillaPlist.substr(0, slash);
+			if (auto metadata = typeinfo_cast<CCDictionary *>(dict->objectForKey("metadata"))) {
+				texturePath = joinPath(vanillaDir, metadata->valueForKey("textureFileName")->getCString());
+			}
+			if (texturePath.empty()) {
+				auto dot = vanillaPlist.find_last_of('.');
+				texturePath = vanillaPlist.substr(0, dot) + ".png";
+			}
+			addSpriteFramesWithDictionaryOnlyLoadingTextureIfNeeded(dict, texturePath);
+			dict->release();
+		}
+	}
+#endif
 
 	return found;
 }

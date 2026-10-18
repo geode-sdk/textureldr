@@ -1,8 +1,8 @@
 {
-	"geode": "5.6.0",
+	"geode": "5.11.2",
 	"version": "1.10.2",
 	"gd": {
-		"win": "2.2081",
+		"win": "2.2091",
 		"android": "2.2081",
 		"mac": "2.2081",
 		"ios": "2.2081"
@@ -26,6 +26,9 @@
 		]
 	},
 	"dependencies": {
-		"geode.node-ids": "1.20.1"
+		"geode.node-ids": {
+			"version": "1.20.1",
+			"platforms": ["android", "mac", "ios"]
+		}
 	}
 }

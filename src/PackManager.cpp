@@ -1,4 +1,5 @@
 #include "PackManager.hpp"
+#include <asp/fs/std.hpp>
 #include <Geode/loader/Mod.hpp>
 #include <Geode/loader/ModEvent.hpp>
 #include <Geode/loader/Loader.hpp>
@@ -43,12 +44,12 @@ void PackManager::savePacks() {
 }
 
 std::filesystem::path PackManager::getPackDir() {
-    return Mod::get()->getConfigDir() / "packs";
+    return std::filesystem::path(Mod::get()->getConfigDir().native()) / "packs";
 }
 
 size_t PackManager::loadPacks() {
     auto packDir = PackManager::getPackDir();
-    (void)file::createDirectoryAll(packDir);
+    (void)file::createDirectoryAll(asp::fs::Path::fromStdPath(packDir));
 
     size_t loaded = 0;
 
@@ -58,7 +59,7 @@ size_t PackManager::loadPacks() {
     for (auto& dir : std::filesystem::directory_iterator(packDir)) {
         auto packRes = Pack::from(dir);
         if (!packRes) {
-            log::warn("Unable to load pack {}: {}", string::pathToString(dir.path()), packRes.unwrapErr());
+            log::warn("Unable to load pack {}: {}", asp::fs::Path::fromStdPath(dir.path()).string(), packRes.unwrapErr());
         } else {
             found.push_back(packRes.unwrap());
             loaded++;
@@ -72,8 +73,8 @@ size_t PackManager::loadPacks() {
     // manually do this so we can skip packs that fail
     for (auto const& obj : Mod::get()->getSavedValue<std::vector<matjson::Value>>("applied")) {
         if (obj.isObject() && obj.contains("path") && obj["path"].isString()) {
-            if(auto pathRes = obj["path"].as<std::filesystem::path>()) {
-                auto res = Pack::from(pathRes.unwrap());
+            if(auto pathRes = obj["path"].as<asp::fs::Path>()) {
+                auto res = Pack::from(pathRes.unwrap().native());
                 if (res) {
                     savedApplied.push_back(res.unwrap());
                 }

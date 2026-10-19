@@ -1,4 +1,5 @@
 #include "PackSelectPopup.hpp"
+#include <asp/fs/std.hpp>
 #include <Geode/ui/General.hpp>
 #include <Geode/ui/Notification.hpp>
 #include <Geode/utils/cocos.hpp>
@@ -210,7 +211,7 @@ void PackSelectPopup::onApply(CCObject*) {
 }
 
 void PackSelectPopup::onOpenFolder(CCObject*) {
-    utils::file::openFolder(PackManager::get()->getPackDir());
+    utils::file::openFolder(asp::fs::Path::fromStdPath(PackManager::get()->getPackDir()));
 }
 
 void PackSelectPopup::onReloadPacks(CCObject*) {

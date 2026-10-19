@@ -1,4 +1,5 @@
 #include "PackNode.hpp"
+#include <asp/fs/std.hpp>
 #include <Geode/binding/CCMenuItemToggler.hpp>
 #include <Geode/ui/LazySprite.hpp>
 #include "PackSelectPopup.hpp"
@@ -44,7 +45,7 @@ bool PackNode::init(
         }
         limitNodeSize(logo, logoSize, 1.f, .1f);
     });
-    logo->loadFromFile((pack->getResourcesPath() / "pack.png"));
+    logo->loadFromFile(asp::fs::Path::fromStdPath(pack->getResourcesPath() / "pack.png"));
     logo->setPosition({ SPACE_FOR_LOGO / 2 + PADDING, HEIGHT / 2 });
     this->addChild(logo);
     

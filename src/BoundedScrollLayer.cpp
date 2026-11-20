@@ -34,8 +34,8 @@ bool BoundedScrollLayer::testLocation(CCPoint point) {
     return false;
 }
 
-void BoundedScrollLayer::scrollWheel(float y, float x)  {
-    if (!m_doScroll || !testLocation(getMousePos())) return;
+bool BoundedScrollLayer::scrollWheel(float y, float x)  {
+    if (!m_doScroll || !testLocation(getMousePos())) return false;
 
-    ScrollLayer::scrollWheel(y, x);
+    return ScrollLayer::scrollWheel(y, x);
 }

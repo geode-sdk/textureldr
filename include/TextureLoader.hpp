@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Geode/loader/Dispatch.hpp>
+#include <Geode/loader/EventExport.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/utils/VersionInfo.hpp>
 
@@ -26,14 +26,14 @@ struct Pack {
     std::vector<std::string> authors;
 
     /// Path from where the pack originates from. May be a file (apk, zip) or a folder
-    std::filesystem::path path;
+    asp::fs::Path path;
     /// Path where the resources are located. This is what is added to the search path
-    std::filesystem::path resourcesPath;
+    asp::fs::Path resourcesPath;
 };
 
-inline std::vector<Pack> getAvailablePacks() GEODE_EVENT_EXPORT_NORES(&getAvailablePacks, ());
-inline std::vector<Pack> getAppliedPacks() GEODE_EVENT_EXPORT_NORES(&getAppliedPacks, ());
-inline void openPopup() GEODE_EVENT_EXPORT_NORES(&openPopup, ());
+GEODE_EVENT_EXPORT(std::vector<Pack>, getAvailablePacks, (), ());
+GEODE_EVENT_EXPORT(std::vector<Pack>, getAppliedPacks, (), ());
+GEODE_EVENT_EXPORT(void, openPopup, (), ());
 
 }
 

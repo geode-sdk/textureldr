@@ -17,5 +17,5 @@ public:
     );
 
     bool testLocation(CCPoint point);
-    void scrollWheel(float y, float) override;
+    bool scrollWheel(float y, float) override;
 };

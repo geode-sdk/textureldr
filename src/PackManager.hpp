@@ -2,6 +2,7 @@
 
 #include "Pack.hpp"
 #include <Geode/utils/cocos.hpp>
+#include <asp/fs.hpp>
 
 enum class PackListType {
     Available,
@@ -27,5 +28,5 @@ public:
     size_t loadPacks();
     void applyPacks(geode::cocos::CreateSceneFunc func = nullptr);
 
-    [[nodiscard]] static std::filesystem::path getPackDir();
+    [[nodiscard]] static asp::fs::Path getPackDir();
 };

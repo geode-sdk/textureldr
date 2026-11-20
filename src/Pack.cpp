@@ -3,6 +3,7 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
 #include <Geode/utils/file.hpp>
+#include <asp/fs.hpp>
 
 Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     auto info = PackInfo();
@@ -39,24 +40,24 @@ Result<PackInfo> PackInfo::from(matjson::Value const& json) {
     return Ok(info);
 }
 
-std::filesystem::path Pack::getOriginPath() const {
+asp::fs::Path Pack::getOriginPath() const {
     return m_path;
 }
 
-std::filesystem::path Pack::getResourcesPath() const {
+asp::fs::Path Pack::getResourcesPath() const {
     return m_resourcesPath;
 }
 
 std::string Pack::getID() const {
     return m_info.has_value() ? 
         m_info.value().m_id :
-        string::pathToString(m_path.filename());
+        m_path.filename() ? m_path.filename()->string() : "Unknown";
 }
 
 std::string Pack::getDisplayName() const {
     return m_info.has_value() ?
         m_info.value().m_name :
-        string::pathToString(m_path.filename());
+        m_path.filename() ? m_path.filename()->string() : "Unknown";
 }
 
 std::optional<PackInfo> Pack::getInfo() const {
@@ -66,7 +67,7 @@ std::optional<PackInfo> Pack::getInfo() const {
 Result<> Pack::apply() {
     CCFileUtils::get()->addTexturePack(CCTexturePack {
         .m_id = this->getID(),
-        .m_paths = { string::pathToString(this->getResourcesPath()) }
+        .m_paths = { this->getResourcesPath().string() }
     });
     return Ok();
 }
@@ -95,7 +96,7 @@ Result<> Pack::setup() {
         m_resourcesPath = *optPath;
     }
     // TODO: read this from the zip before extracting.. somehow
-    if (std::filesystem::exists(m_resourcesPath / "pack.json")) {
+    if ((m_resourcesPath / "pack.json").exists()) {
         GEODE_UNWRAP(this->parsePackJson());
     }
     return Ok();
@@ -103,9 +104,9 @@ Result<> Pack::setup() {
 
 Result<> Pack::extract() {
     // this method is only for zips and stuff
-    if (std::filesystem::is_directory(m_path)) return Ok();
+    if (m_path.isDir()) return Ok();
 
-    auto const fileExt = string::pathToString(m_path.extension());
+    auto const fileExt = m_path.extension();
     // TODO: we dont support rar, lol
     if (fileExt != ".zip" && fileExt != ".apk") {
         return Err("Expected zip or apk");
@@ -117,22 +118,22 @@ Result<> Pack::extract() {
     auto datePath = extractPath / "modified-at";
     std::string currentHash = file::readString(datePath).unwrapOr("");
 
-    std::error_code ec;
-    auto modifiedDate = std::filesystem::last_write_time(m_path, ec);
-    if (ec) {
-        return Err("Unable get last_write_time: {}", ec.message());
+    auto metadata = asp::fs::metadata(m_path);
+    if (!metadata) {
+        return Err("Unable get metadata: {}", metadata.unwrapErr());
     }
-    auto modifiedCount = std::chrono::duration_cast<std::chrono::milliseconds>(modifiedDate.time_since_epoch());
-    auto modifiedHash = std::to_string(modifiedCount.count());
+
+    auto modifiedDate = metadata.unwrap().modifiedAt;
+    auto modifiedHash = modifiedDate.has_value() ? fmt::to_string(modifiedDate->timeSinceEpoch()) : "Unknown";
     if (currentHash == modifiedHash) {
         m_unzippedPath = extractPath;
         return Ok();
     }
     log::debug("Hash mismatch detected, unzipping {}", this->getID());
 
-    std::filesystem::remove_all(extractPath, ec);
-    if (ec) {
-        return Err("Unable to delete temp dir: {}", ec.message());
+    auto removeRes = asp::fs::removeDirAll(extractPath, false);
+    if(!removeRes) {
+        return Err("Unable to delete temp dir: {}", removeRes.unwrapErr());
     }
 
     (void) utils::file::createDirectoryAll(extractPath);
@@ -150,21 +151,21 @@ Result<> Pack::extract() {
     return Ok();
 }
 
-std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::path targetPath) {
+std::optional<asp::fs::Path> Pack::findResourcesPath(asp::fs::Path targetPath) {
     // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
 
-    if (string::pathToString(m_path.extension()) == ".apk") {
+    if (m_path.extension() == ".apk") {
         // resources can only be in one place! very easy
         return m_unzippedPath / "assets";
     }
 
-    if (std::filesystem::exists(targetPath / "pack.json") || std::filesystem::exists(targetPath / "pack.png")) {
+    if ((targetPath / "pack.json").exists() || (targetPath / "pack.png").exists()) {
         // this pack is made for texture loader, so it should be correct already
         return targetPath;
     }
 
     const auto existsDir = [](auto path) {
-        return std::filesystem::exists(path) && std::filesystem::is_directory(path);
+        return path.exists() && path.isDir();
     };
 
     if (existsDir(targetPath / "Resources")) {
@@ -179,12 +180,15 @@ std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::pa
 
     // Look for any plist files, or png files ending in -uhd -hd or starting in GJ_
 
-    for (auto const& file : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
-        if (!file.is_regular_file()) continue;
+    auto pathIterRes = asp::fs::iterDir(targetPath);
+    if(pathIterRes) for (auto fileRes : pathIterRes.unwrap()) {
+        if(!fileRes) continue;
+        auto file = fileRes.unwrap();
+        if (!file.isFile()) continue;
 
-        auto const path = file.path();
-        auto const name = string::pathToString(path.stem());
-        auto const ext = string::pathToString(path.extension());
+        auto const path = file.path;
+        auto const name = path.stem().value_or("");
+        auto const ext = path.extension().value_or("");
 
         if (ext == ".plist") {
             return targetPath;
@@ -198,10 +202,13 @@ std::optional<std::filesystem::path> Pack::findResourcesPath(std::filesystem::pa
     }
 
     // ok, look recursively through the folders then
-    for (auto const& dir : std::filesystem::directory_iterator(targetPath, std::filesystem::directory_options::skip_permission_denied)) {
-        if (!dir.is_directory()) continue;
+    auto pathIterRes2 = asp::fs::iterDir(targetPath);
+    if(pathIterRes2) for (auto dirRes : pathIterRes2.unwrap()) {
+        if(!dirRes) continue;
+        auto dir = dirRes.unwrap();
+        if (!dir.isDir()) continue;
 
-        auto const path = dir.path();
+        auto const path = dir.path;
 
         // TODO: this might skip over texture packs that set geode mod textures..
         // though, they should be using pack.json or pack.png anyways!
@@ -218,8 +225,8 @@ Pack::~Pack() {
     (void)this->unapply();
 }
 
-Result<std::shared_ptr<Pack>> Pack::from(std::filesystem::path const& dir) {
-    if (!std::filesystem::exists(dir)) {
+Result<std::shared_ptr<Pack>> Pack::from(asp::fs::Path const& dir) {
+    if (!dir.exists()) {
         return Err("Path does not exist");
     }
     auto pack = std::make_shared<Pack>();
@@ -235,7 +242,7 @@ matjson::Value matjson::Serialize<std::shared_ptr<Pack>>::toJson(std::shared_ptr
 }
 
 Result<std::shared_ptr<Pack>> matjson::Serialize<std::shared_ptr<Pack>>::fromJson(matjson::Value const& value) {
-    GEODE_UNWRAP_INTO(auto path, value["path"].as<std::filesystem::path>());
+    GEODE_UNWRAP_INTO(auto path, value["path"].as<asp::fs::Path>());
     GEODE_UNWRAP_INTO(auto pack, Pack::from(path));
     return Ok(pack);
 }

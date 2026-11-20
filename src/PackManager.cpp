@@ -42,7 +42,7 @@ void PackManager::savePacks() {
     Mod::get()->setSavedValue("applied", m_applied);
 }
 
-std::filesystem::path PackManager::getPackDir() {
+asp::fs::Path PackManager::getPackDir() {
     return Mod::get()->getConfigDir() / "packs";
 }
 
@@ -55,10 +55,14 @@ size_t PackManager::loadPacks() {
     std::vector<std::shared_ptr<Pack>> found;
 
     // Load new packs
-    for (auto& dir : std::filesystem::directory_iterator(packDir)) {
-        auto packRes = Pack::from(dir);
+    auto res = asp::fs::iterDir(packDir);
+    if(res) for (auto dirRes : res.unwrap()) {
+        if(!dirRes) continue;
+        auto dir = dirRes.unwrap();
+
+        auto packRes = Pack::from(dir.path);
         if (!packRes) {
-            log::warn("Unable to load pack {}: {}", string::pathToString(dir.path()), packRes.unwrapErr());
+            log::warn("Unable to load pack {}: {}", dir.path, packRes.unwrapErr());
         } else {
             found.push_back(packRes.unwrap());
             loaded++;
@@ -72,7 +76,7 @@ size_t PackManager::loadPacks() {
     // manually do this so we can skip packs that fail
     for (auto const& obj : Mod::get()->getSavedValue<std::vector<matjson::Value>>("applied")) {
         if (obj.isObject() && obj.contains("path") && obj["path"].isString()) {
-            if(auto pathRes = obj["path"].as<std::filesystem::path>()) {
+            if(auto pathRes = obj["path"].as<asp::fs::Path>()) {
                 auto res = Pack::from(pathRes.unwrap());
                 if (res) {
                     savedApplied.push_back(res.unwrap());

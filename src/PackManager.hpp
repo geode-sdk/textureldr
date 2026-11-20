@@ -25,7 +25,7 @@ public:
 
     void savePacks();
     size_t loadPacks();
-    void applyPacks(geode::cocos::CreateLayerFunc func = nullptr);
+    void applyPacks(geode::cocos::CreateSceneFunc func = nullptr);
 
     [[nodiscard]] static std::filesystem::path getPackDir();
 };

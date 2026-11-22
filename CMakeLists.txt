@@ -13,6 +13,11 @@ file(GLOB SOURCES
 	src/*.cpp
 )
 
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
+	enable_language(OBJCXX)
+	list(APPEND SOURCES src/VanillaResourceResolver.mm)
+endif()
+
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 if (NOT DEFINED ENV{GEODE_SDK})

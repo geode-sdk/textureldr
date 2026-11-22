@@ -122,7 +122,7 @@ bool PackSelectPopup::init() {
             ->setMainAxisScaling(AxisScaling::Grow)
     );
     m_availableList->setPosition(
-        size / 2 + CCPoint { -distanceFromCenter, heightOffset } - LAYER_SIZE * scale / 2
+        size / 2 + CCPoint { -distanceFromCenter, heightOffset }
     );
     m_availableList->setID("available-list");
     m_mainLayer->addChild(m_availableList);
@@ -156,7 +156,7 @@ bool PackSelectPopup::init() {
             ->setMainAxisScaling(AxisScaling::Grow)
     );
     m_appliedList->setPosition(
-        size / 2 + CCPoint { distanceFromCenter, heightOffset } - LAYER_SIZE * scale / 2
+        size / 2 + CCPoint { distanceFromCenter, heightOffset }
     );
     m_appliedList->setID("applied-list");
     m_mainLayer->addChild(m_appliedList);

@@ -19,8 +19,6 @@ protected:
         float width
     );
 
-    void onView(CCObject*);
-
 public:
     static PackNode* create(
         PackSelectPopup* layer,

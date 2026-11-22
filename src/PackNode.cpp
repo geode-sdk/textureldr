@@ -2,7 +2,6 @@
 #include <Geode/binding/CCMenuItemToggler.hpp>
 #include <Geode/ui/LazySprite.hpp>
 #include "PackSelectPopup.hpp"
-#include "PackInfoPopup.hpp"
 #include "DragThingy.hpp"
 
 bool PackNode::init(
@@ -59,7 +58,7 @@ bool PackNode::init(
     nameLabel->setID("pack-name-text");
 
     auto nameButton = CCMenuItemSpriteExtra::create(
-        nameLabel, this, menu_selector(PackNode::onView)
+        nameLabel, this, nullptr
     );
     nameButton->setPosition(
         PADDING + SPACE_FOR_LOGO + nameLabel->getScaledContentSize().width / 2 - menuPosX,
@@ -140,10 +139,6 @@ bool PackNode::init(
     this->addChild(menu);
 
     return true;
-}
-
-void PackNode::onView(CCObject*) {
-    PackInfoPopup::create(m_pack)->show();
 }
 
 PackNode* PackNode::create(

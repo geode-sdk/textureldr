@@ -108,7 +108,7 @@ Result<> Pack::extract() {
 
     auto const fileExt = m_path.extension();
     // TODO: we dont support rar, lol
-    if (fileExt != ".zip" && fileExt != ".apk") {
+    if (fileExt != "zip" && fileExt != "apk") {
         return Err("Expected zip or apk");
     }
 
@@ -154,7 +154,7 @@ Result<> Pack::extract() {
 std::optional<asp::fs::Path> Pack::findResourcesPath(asp::fs::Path targetPath) {
     // Packs are often distributed in weird ways, this code tries to find where the resources actually are..
 
-    if (m_path.extension() == ".apk") {
+    if (m_path.extension() == "apk") {
         // resources can only be in one place! very easy
         return m_unzippedPath / "assets";
     }
@@ -190,13 +190,13 @@ std::optional<asp::fs::Path> Pack::findResourcesPath(asp::fs::Path targetPath) {
         auto const name = path.stem().value_or("");
         auto const ext = path.extension().value_or("");
 
-        if (ext == ".plist") {
+        if (ext == "plist") {
             return targetPath;
-        } else if (ext == ".png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd"))) {
+        } else if (ext == "png" && (name.starts_with("GJ_") || name.ends_with("-hd") || name.ends_with("-uhd"))) {
             return targetPath;
-        } else if (ext == ".ogg") {
+        } else if (ext == "ogg") {
             return targetPath;
-        } else if (ext == ".mp3") {
+        } else if (ext == "mp3") {
             return targetPath;
         }
     }
